@@ -9,6 +9,9 @@ import { Truck, User, LogOut, Plus, Bell, Settings, BarChart3, Users, FileText }
 import { StatsCards } from "@/components/stats-cards";
 import { TripsTable } from "@/components/trips-table";
 import { TripModal } from "@/components/trip-modal";
+import { DriversManagement } from "@/components/drivers-management";
+import { ReportsDashboard } from "@/components/reports-dashboard";
+import { SettingsManagement } from "@/components/settings-management";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -223,41 +226,11 @@ export default function HomePage() {
             </>
           )}
           
-          {activeSection === "drivers" && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center py-12">
-                  <Users className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-                  <h3 className="text-lg font-medium text-slate-900 mb-2">Gestión de Conductores</h3>
-                  <p className="text-slate-500">Esta sección estará disponible próximamente</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {activeSection === "drivers" && <DriversManagement />}
           
-          {activeSection === "reports" && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center py-12">
-                  <FileText className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-                  <h3 className="text-lg font-medium text-slate-900 mb-2">Reportes y Análisis</h3>
-                  <p className="text-slate-500">Esta sección estará disponible próximamente</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {activeSection === "reports" && <ReportsDashboard />}
           
-          {activeSection === "settings" && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center py-12">
-                  <Settings className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-                  <h3 className="text-lg font-medium text-slate-900 mb-2">Configuración del Sistema</h3>
-                  <p className="text-slate-500">Esta sección estará disponible próximamente</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {activeSection === "settings" && <SettingsManagement />}
         </main>
       </div>
 
