@@ -1,0 +1,135 @@
+Fuel Truck Management System - Full Stack Project
+Project Context
+Create a full-stack web application for managing fuel truck dispatches and deliveries. This system serves as an administrative dashboard for tracking real-time trips, drivers, fuel types, origins, and destinations of each dispatch operation.
+Technology Stack Requirements
+
+Frontend: React + Tailwind CSS
+Backend: Node.js + Express.js
+Database: MongoDB
+Authentication: JWT (JSON Web Tokens)
+Infrastructure: Docker (including database containerization)
+Documentation: Professional README with setup instructions
+
+Core Functional Requirements
+1. Authentication System
+
+Implement email/password login functionality
+Generate and return JWT tokens upon successful authentication
+Protect both backend routes and frontend pages (authentication required for dashboard access)
+Include proper JWT validation middleware
+
+2. Backend API Specifications
+Create a RESTful API with the following protected endpoints:
+GET /api/viajes - Retrieve all trips
+POST /api/viajes - Create new trip
+PUT /api/viajes/:id - Update existing trip
+DELETE /api/viajes/:id - Logical deletion (set status to "Cancelled")
+Trip Data Model:
+json{
+  "id": "UUID",
+  "camion": "ABC123",
+  "conductor": "Juan Pérez",
+  "origen": "Planta X",
+  "destino": "Estación Y",
+  "combustible": "Diésel",
+  "cantidad_litros": 15000,
+  "fecha_salida": "2025-05-10T14:30:00Z",
+  "estado": "En tránsito"
+}
+Business Logic Validations:
+
+Maximum fuel capacity: 30,000 liters per trip
+No past dates allowed for departure time
+Proper input validation and error handling
+
+3. Frontend Dashboard Requirements
+Authentication Flow:
+
+Login form with email/password fields
+JWT token storage and management
+Automatic redirect to dashboard after successful login
+Route protection (redirect to login if not authenticated)
+
+Dashboard Features:
+
+Trip Management Table:
+
+Display all trips in a sortable, filterable table
+Sorting options: driver, fuel type, status, departure date
+Filtering capabilities by multiple criteria
+Real-time updates when trips are added/modified
+
+
+Trip Creation:
+
+"Add New Trip" button that opens a modal
+Complete form with all required fields
+Form validation matching backend business rules
+Success/error feedback
+
+
+Additional Features:
+
+Trip editing functionality (inline or modal)
+Status updates
+Responsive design with Tailwind CSS
+
+
+
+Technical Implementation Guidelines
+Database Setup
+
+MongoDB collections for users and trips
+Proper indexing for performance
+Data seeding for demo purposes
+
+Docker Configuration
+
+Multi-container setup (frontend, backend, database)
+Docker Compose for orchestration
+Environment variable management
+Development and production configurations
+
+Code Quality Standards
+
+Clean, well-documented code
+Error handling and logging
+Input validation and sanitization
+Security best practices (password hashing, JWT security)
+
+Deliverables
+
+Complete source code with proper folder structure
+Docker configuration files (Dockerfile, docker-compose.yml)
+Professional README including:
+
+Project overview and features
+Technology stack explanation
+Setup and installation instructions
+API documentation
+Environment variables guide
+Usage examples and screenshots
+
+
+Sample data for testing and demonstration
+
+Additional Requirements
+
+Implement proper error handling throughout the application
+Include loading states and user feedback
+Use modern React patterns (hooks, functional components)
+Follow REST API conventions
+Implement proper CORS configuration
+Add basic logging for debugging
+
+Success Criteria
+The final application should:
+
+Allow users to log in securely
+Display a functional dashboard with trip management capabilities
+Support full CRUD operations for trips
+Validate business rules correctly
+Run smoothly in Docker containers
+Include comprehensive documentation for easy setup and usage
+
+Generate a complete, production-ready codebase that demonstrates best practices in full-stack development with the specified technology stack.
