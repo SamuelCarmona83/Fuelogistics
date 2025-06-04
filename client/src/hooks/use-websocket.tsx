@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
-export function useWebSocket() {
+export function useWebSocket(onNotification?: (notification: any) => void) {
   const wsRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
 
@@ -30,6 +30,16 @@ export function useWebSocket() {
               title: 'Nuevo viaje creado',
               description: `Viaje de ${message.data.conductor} ha sido añadido`,
             });
+            // Add to notifications
+            if (onNotification) {
+              onNotification({
+                id: Date.now(),
+                title: 'Nuevo viaje creado',
+                message: `Viaje de ${message.data.conductor} hacia ${message.data.destino}`,
+                time: 'ahora',
+                read: false
+              });
+            }
             break;
             
           case 'TRIP_UPDATED':
@@ -39,6 +49,16 @@ export function useWebSocket() {
               title: 'Viaje actualizado',
               description: `Viaje de ${message.data.conductor} ha sido modificado`,
             });
+            // Add to notifications
+            if (onNotification) {
+              onNotification({
+                id: Date.now(),
+                title: 'Viaje actualizado',
+                message: `Viaje de ${message.data.conductor} ha sido modificado`,
+                time: 'ahora',
+                read: false
+              });
+            }
             break;
             
           case 'TRIP_DELETED':
@@ -48,6 +68,16 @@ export function useWebSocket() {
               title: 'Viaje cancelado',
               description: 'Un viaje ha sido cancelado',
             });
+            // Add to notifications
+            if (onNotification) {
+              onNotification({
+                id: Date.now(),
+                title: 'Viaje cancelado',
+                message: 'Un viaje ha sido cancelado por otro usuario',
+                time: 'ahora',
+                read: false
+              });
+            }
             break;
             
           default:
