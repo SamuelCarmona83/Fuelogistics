@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useWebSocket } from "@/hooks/use-websocket";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +16,9 @@ import { TripModal } from "@/components/trip-modal";
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Initialize WebSocket connection for real-time updates
+  useWebSocket();
 
   return (
     <div className="h-full flex">
