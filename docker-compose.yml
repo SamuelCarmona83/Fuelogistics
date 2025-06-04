@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fuel_truck_db
+      POSTGRES_USER: fuel_admin
+      POSTGRES_PASSWORD: fuel_secure_pass_2024
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - fuel-truck-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fuel_admin -d fuel_truck_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Fuel Truck Management Application (Development)
+  app-dev:
+    build:
+      context: .
+      target: dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://fuel_admin:fuel_secure_pass_2024@postgres:5432/fuel_truck_db
+      SESSION_SECRET: fuel_truck_session_secret_dev_2024
+      PORT: 5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fuel-truck-network
+    profiles:
+      - dev
+
+  # Fuel Truck Management Application (Production)
+  app-prod:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://fuel_admin:fuel_secure_pass_2024@postgres:5432/fuel_truck_db
+      SESSION_SECRET: fuel_truck_session_secret_prod_2024
+      PORT: 5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fuel-truck-network
+    profiles:
+      - prod
+
+  # Redis for session storage (optional enhancement)
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - fuel-truck-network
+    profiles:
+      - enhanced
+
+networks:
+  fuel-truck-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

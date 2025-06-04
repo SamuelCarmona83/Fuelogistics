@@ -1,0 +1,25 @@
+# Override file for local development
+version: '3.8'
+
+services:
+  app-dev:
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://fuel_admin:fuel_secure_pass_2024@postgres:5432/fuel_truck_db
+      SESSION_SECRET: fuel_truck_session_secret_dev_2024
+      PORT: 5000
+      # Enable hot reload
+      VITE_HOST: 0.0.0.0
+    stdin_open: true
+    tty: true
+
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: fuel_truck_db
+      POSTGRES_USER: fuel_admin
+      POSTGRES_PASSWORD: fuel_secure_pass_2024
