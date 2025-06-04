@@ -33,7 +33,7 @@ export const insertTripSchema = createInsertSchema(trips).omit({
   updated_at: true,
 }).extend({
   cantidad_litros: z.number().min(1).max(30000, "Maximum fuel capacity is 30,000 liters"),
-  fecha_salida: z.string().refine((date) => {
+  fecha_salida: z.union([z.string(), z.date()]).refine((date) => {
     const departureDate = new Date(date);
     const now = new Date();
     return departureDate > now;

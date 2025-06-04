@@ -61,6 +61,12 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/viajes", requireAuth, async (req, res) => {
     try {
       const validatedData = insertTripSchema.parse(req.body);
+      
+      // Convert fecha_salida string to Date object if it's a string
+      if (typeof validatedData.fecha_salida === 'string') {
+        validatedData.fecha_salida = new Date(validatedData.fecha_salida);
+      }
+      
       const trip = await storage.createTrip(validatedData);
       res.status(201).json(trip);
     } catch (error) {

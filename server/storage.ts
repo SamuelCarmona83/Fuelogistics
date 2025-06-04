@@ -88,7 +88,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      query = query.where(and(...conditions)) as any;
     }
 
     // Apply sorting
@@ -97,22 +97,22 @@ export class DatabaseStorage implements IStorage {
     
     switch (sortField) {
       case 'conductor':
-        query = query.orderBy(sortOrder === 'asc' ? asc(trips.conductor) : desc(trips.conductor));
+        query = (query as any).orderBy(sortOrder === 'asc' ? asc(trips.conductor) : desc(trips.conductor));
         break;
       case 'camion':
-        query = query.orderBy(sortOrder === 'asc' ? asc(trips.camion) : desc(trips.camion));
+        query = (query as any).orderBy(sortOrder === 'asc' ? asc(trips.camion) : desc(trips.camion));
         break;
       case 'combustible':
-        query = query.orderBy(sortOrder === 'asc' ? asc(trips.combustible) : desc(trips.combustible));
+        query = (query as any).orderBy(sortOrder === 'asc' ? asc(trips.combustible) : desc(trips.combustible));
         break;
       case 'estado':
-        query = query.orderBy(sortOrder === 'asc' ? asc(trips.estado) : desc(trips.estado));
+        query = (query as any).orderBy(sortOrder === 'asc' ? asc(trips.estado) : desc(trips.estado));
         break;
       default:
-        query = query.orderBy(sortOrder === 'asc' ? asc(trips.fecha_salida) : desc(trips.fecha_salida));
+        query = (query as any).orderBy(sortOrder === 'asc' ? asc(trips.fecha_salida) : desc(trips.fecha_salida));
     }
 
-    return await query;
+    return await (query as any);
   }
 
   async getTripById(id: string): Promise<Trip | undefined> {
@@ -125,6 +125,7 @@ export class DatabaseStorage implements IStorage {
       .insert(trips)
       .values({
         ...trip,
+        fecha_salida: new Date(trip.fecha_salida),
         created_at: new Date(),
         updated_at: new Date(),
       })
@@ -133,10 +134,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTrip(id: string, tripData: Partial<UpdateTrip>): Promise<Trip | undefined> {
+    const updateData: any = { ...tripData };
+    
+    // Convert fecha_salida to Date if it exists
+    if (updateData.fecha_salida) {
+      updateData.fecha_salida = new Date(updateData.fecha_salida);
+    }
+    
     const [updatedTrip] = await db
       .update(trips)
       .set({
-        ...tripData,
+        ...updateData,
         updated_at: new Date(),
       })
       .where(eq(trips.id, id))
