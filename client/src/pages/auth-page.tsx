@@ -1,0 +1,213 @@
+import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { Redirect } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Truck, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertUserSchema } from "@shared/schema";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+export default function AuthPage() {
+  const { user, loginMutation, registerMutation } = useAuth();
+  const [activeTab, setActiveTab] = useState("login");
+
+  const loginForm = useForm({
+    resolver: zodResolver(insertUserSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const registerForm = useForm({
+    resolver: zodResolver(insertUserSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  // Redirect if already authenticated
+  if (user) {
+    return <Redirect to="/" />;
+  }
+
+  const onLogin = (data: any) => {
+    loginMutation.mutate(data);
+  };
+
+  const onRegister = (data: any) => {
+    registerMutation.mutate(data);
+  };
+
+  return (
+    <div className="min-h-screen flex">
+      {/* Left side - Forms */}
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 bg-primary rounded-xl flex items-center justify-center mb-6">
+              <Truck className="text-white h-8 w-8" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">
+              {activeTab === "login" ? "Iniciar Sesión" : "Crear Cuenta"}
+            </h2>
+            <p className="text-slate-600">Sistema de Gestión de Camiones de Combustible</p>
+          </div>
+
+          <Card>
+            <CardHeader className="pb-4">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
+                  <TabsTrigger value="register">Registrarse</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardHeader>
+
+            <CardContent>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsContent value="login" className="space-y-4">
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                      <FormField
+                        control={loginForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Correo Electrónico</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="email"
+                                placeholder="admin@fueltrucks.com"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contraseña</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="••••••••"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={loginMutation.isPending}
+                      >
+                        {loginMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Iniciar Sesión
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+
+                <TabsContent value="register" className="space-y-4">
+                  <Form {...registerForm}>
+                    <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Correo Electrónico</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="email"
+                                placeholder="tu@email.com"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contraseña</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="••••••••"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={registerMutation.isPending}
+                      >
+                        {registerMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Crear Cuenta
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Right side - Hero section */}
+      <div className="hidden lg:flex lg:flex-1 bg-primary flex-col justify-center px-12 text-white">
+        <div className="max-w-md">
+          <h1 className="text-4xl font-bold mb-6">
+            Gestión Eficiente de Flotas
+          </h1>
+          <p className="text-xl text-primary-100 mb-8">
+            Controla y monitorea todos los viajes de tus camiones de combustible desde una plataforma centralizada.
+          </p>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="h-2 w-2 bg-white rounded-full"></div>
+              <span>Seguimiento en tiempo real</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="h-2 w-2 bg-white rounded-full"></div>
+              <span>Validación de reglas de negocio</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="h-2 w-2 bg-white rounded-full"></div>
+              <span>Reportes y análisis completos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
