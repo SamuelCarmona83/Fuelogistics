@@ -102,7 +102,10 @@ export function ReportsDashboard() {
 
   const exportReport = () => {
     const reportData = {
-      period: dateRange,
+      period: {
+        from: startOfMonth(new Date()),
+        to: endOfMonth(new Date())
+      },
       type: reportType,
       data: chartsData,
       generatedAt: new Date().toISOString(),

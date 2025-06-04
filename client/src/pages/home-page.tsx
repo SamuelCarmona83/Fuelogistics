@@ -12,6 +12,7 @@ import { TripModal } from "@/components/trip-modal";
 import { DriversManagement } from "@/components/drivers-management";
 import { ReportsDashboard } from "@/components/reports-dashboard";
 import { SettingsManagement } from "@/components/settings-management";
+import { EnhancedTripsLogistics } from "@/components/enhanced-trips-logistics";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -219,12 +220,7 @@ export default function HomePage() {
             </>
           )}
           
-          {activeSection === "trips" && (
-            <>
-              {/* Trips Table */}
-              <TripsTable />
-            </>
-          )}
+          {activeSection === "trips" && <EnhancedTripsLogistics />}
           
           {activeSection === "drivers" && <DriversManagement />}
           
