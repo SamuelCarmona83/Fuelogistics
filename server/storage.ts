@@ -121,14 +121,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTrip(trip: InsertTrip): Promise<Trip> {
+    const tripData = {
+      ...trip,
+      fecha_salida: trip.fecha_salida instanceof Date ? trip.fecha_salida : new Date(trip.fecha_salida),
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+    
     const [newTrip] = await db
       .insert(trips)
-      .values({
-        ...trip,
-        fecha_salida: new Date(trip.fecha_salida),
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
+      .values(tripData)
       .returning();
     return newTrip;
   }

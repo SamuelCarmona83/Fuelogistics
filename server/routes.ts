@@ -31,10 +31,17 @@ export function registerRoutes(app: Express): Server {
       // Calculate stats for dashboard
       const activeTrips = trips.filter(t => t.estado === "En tránsito").length;
       const completedToday = trips.filter(t => {
+        if (t.estado !== "Completado") return false;
         const today = new Date();
-        const tripDate = new Date(t.updated_at || t.created_at);
-        return t.estado === "Completado" && 
-               tripDate.toDateString() === today.toDateString();
+        if (t.updated_at) {
+          const tripDate = new Date(t.updated_at);
+          return tripDate.toDateString() === today.toDateString();
+        }
+        if (t.created_at) {
+          const tripDate = new Date(t.created_at);
+          return tripDate.toDateString() === today.toDateString();
+        }
+        return false;
       }).length;
       const litersTransported = trips
         .filter(t => t.estado === "Completado")
