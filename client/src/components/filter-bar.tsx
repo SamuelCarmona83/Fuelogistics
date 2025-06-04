@@ -28,20 +28,22 @@ export function FilterBar({ onFiltersChange }: FilterBarProps) {
   };
 
   const handleStatusChange = (value: string) => {
-    setStatus(value);
+    const actualValue = value === "all" ? "" : value;
+    setStatus(actualValue);
     onFiltersChange?.({
       search,
-      status: value,
+      status: actualValue,
       fuelType,
     });
   };
 
   const handleFuelTypeChange = (value: string) => {
-    setFuelType(value);
+    const actualValue = value === "all" ? "" : value;
+    setFuelType(actualValue);
     onFiltersChange?.({
       search,
       status,
-      fuelType: value,
+      fuelType: actualValue,
     });
   };
 
@@ -75,24 +77,24 @@ export function FilterBar({ onFiltersChange }: FilterBarProps) {
 
           {/* Filters */}
           <div className="flex flex-wrap gap-3">
-            <Select value={status} onValueChange={handleStatusChange}>
+            <Select value={status || "all"} onValueChange={handleStatusChange}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Todos los Estados" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los Estados</SelectItem>
+                <SelectItem value="all">Todos los Estados</SelectItem>
                 <SelectItem value="En tránsito">En tránsito</SelectItem>
                 <SelectItem value="Completado">Completado</SelectItem>
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select value={fuelType} onValueChange={handleFuelTypeChange}>
+            <Select value={fuelType || "all"} onValueChange={handleFuelTypeChange}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Tipo de Combustible" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tipo de Combustible</SelectItem>
+                <SelectItem value="all">Tipo de Combustible</SelectItem>
                 <SelectItem value="Diésel">Diésel</SelectItem>
                 <SelectItem value="Gasolina">Gasolina</SelectItem>
                 <SelectItem value="Gas Natural">Gas Natural</SelectItem>
