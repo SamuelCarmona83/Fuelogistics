@@ -1,4 +1,9 @@
-import { users, trips, type User, type InsertUser, type Trip, type InsertTrip, type UpdateTrip } from "@shared/schema";
+import { 
+  users, trips, drivers, trucks, reports,
+  type User, type InsertUser, type Trip, type InsertTrip, type UpdateTrip,
+  type Driver, type InsertDriver, type Truck, type InsertTruck,
+  type Report, type InsertReport
+} from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, ilike, or, and } from "drizzle-orm";
 import session from "express-session";
@@ -24,6 +29,24 @@ export interface IStorage {
   createTrip(trip: InsertTrip): Promise<Trip>;
   updateTrip(id: string, trip: Partial<UpdateTrip>): Promise<Trip | undefined>;
   deleteTrip(id: string): Promise<void>;
+
+  // Driver operations
+  getDrivers(): Promise<Driver[]>;
+  getDriverById(id: string): Promise<Driver | undefined>;
+  createDriver(driver: InsertDriver): Promise<Driver>;
+  updateDriver(id: string, driver: Partial<InsertDriver>): Promise<Driver | undefined>;
+  deleteDriver(id: string): Promise<void>;
+
+  // Truck operations
+  getTrucks(): Promise<Truck[]>;
+  getTruckById(id: string): Promise<Truck | undefined>;
+  createTruck(truck: InsertTruck): Promise<Truck>;
+  updateTruck(id: string, truck: Partial<InsertTruck>): Promise<Truck | undefined>;
+  deleteTruck(id: string): Promise<void>;
+
+  // Report operations
+  getReports(): Promise<Report[]>;
+  createReport(report: InsertReport): Promise<Report>;
   
   sessionStore: session.SessionStore;
 }
