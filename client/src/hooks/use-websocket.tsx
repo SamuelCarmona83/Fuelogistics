@@ -9,7 +9,9 @@ export function useWebSocket(onNotification?: (notification: any) => void) {
   useEffect(() => {
     // Create WebSocket connection on dedicated path
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    // Use window.location.port or default to 5000 if not set
+    const port = window.location.port || '5000';
+    const wsUrl = `${protocol}//${window.location.hostname}:${port}/ws`;
     
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
