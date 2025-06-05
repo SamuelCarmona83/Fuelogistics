@@ -5,11 +5,11 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { User as SelectUser, IUser } from "@shared/schema";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {}
+    interface User extends IUser { }
   }
 }
 
@@ -52,9 +52,9 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser(async (id: number, done) => {
-    const user = await storage.getUser(id);
+  passport.serializeUser((user: any, done) => done(null, user._id.toString()));
+  passport.deserializeUser(async (id: string, done) => {
+    const user = await storage.getUserById(id);
     done(null, user);
   });
 

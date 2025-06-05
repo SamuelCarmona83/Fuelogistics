@@ -1,192 +1,110 @@
-import { 
-  users, trips, drivers, trucks, reports,
-  type User, type InsertUser, type Trip, type InsertTrip, type UpdateTrip,
-  type Driver, type InsertDriver, type Truck, type InsertTruck,
-  type Report, type InsertReport
-} from "@shared/schema";
-import { db } from "./db";
-import { eq, desc, asc, ilike, or, and } from "drizzle-orm";
-import session from "express-session";
-import connectPg from "connect-pg-simple";
-import { pool } from "./db";
+import { User, Trip, Driver, Truck, Report } from '../shared/schema';
+import { Types } from 'mongoose';
 
-const PostgresSessionStore = connectPg(session);
+interface TripFilters {
+  search?: string;
+  status?: string;
+  fuelType?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
 
-export interface IStorage {
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  
+export const storage = {
+  // User operations
+  async getUserByUsername(username: string) {
+    return User.findOne({ username });
+  },
+  async getUserById(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return User.findById(id);
+  },
+  async createUser(userData: { username: string; password: string; role: string }) {
+    return User.create(userData);
+  },
+
   // Trip operations
-  getTrips(filters?: {
-    search?: string;
-    status?: string;
-    fuelType?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-  }): Promise<Trip[]>;
-  getTripById(id: string): Promise<Trip | undefined>;
-  createTrip(trip: InsertTrip): Promise<Trip>;
-  updateTrip(id: string, trip: Partial<UpdateTrip>): Promise<Trip | undefined>;
-  deleteTrip(id: string): Promise<void>;
+  async getTrips(filters: TripFilters = {}) {
+    const query: any = {};
+    if (filters.search) {
+      query.$or = [
+        { conductor: { $regex: filters.search, $options: 'i' } },
+        { camion: { $regex: filters.search, $options: 'i' } },
+        { origen: { $regex: filters.search, $options: 'i' } },
+        { destino: { $regex: filters.search, $options: 'i' } },
+      ];
+    }
+    if (filters.status) query.estado = filters.status;
+    if (filters.fuelType) query.combustible = filters.fuelType;
+    let sort: any = { fecha_salida: -1 };
+    if (filters.sortBy) {
+      sort = { [filters.sortBy]: filters.sortOrder === 'asc' ? 1 : -1 };
+    }
+    return Trip.find(query).sort(sort);
+  },
+  async getTripById(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return Trip.findById(id);
+  },
+  async createTrip(tripData: any) {
+    return Trip.create(tripData);
+  },
+  async updateTrip(id: string, tripData: any) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return Trip.findByIdAndUpdate(id, { ...tripData, updated_at: new Date() }, { new: true });
+  },
+  async deleteTrip(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return Trip.findByIdAndUpdate(id, { estado: 'Cancelado', updated_at: new Date() }, { new: true });
+  },
 
   // Driver operations
-  getDrivers(): Promise<Driver[]>;
-  getDriverById(id: string): Promise<Driver | undefined>;
-  createDriver(driver: InsertDriver): Promise<Driver>;
-  updateDriver(id: string, driver: Partial<InsertDriver>): Promise<Driver | undefined>;
-  deleteDriver(id: string): Promise<void>;
+  async getDrivers() {
+    return Driver.find();
+  },
+  async getDriverById(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return Driver.findById(id);
+  },
+  async createDriver(driverData: any) {
+    return Driver.create(driverData);
+  },
+  async updateDriver(id: string, driverData: any) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return Driver.findByIdAndUpdate(id, driverData, { new: true });
+  },
+  async deleteDriver(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return Driver.findByIdAndDelete(id);
+  },
 
   // Truck operations
-  getTrucks(): Promise<Truck[]>;
-  getTruckById(id: string): Promise<Truck | undefined>;
-  createTruck(truck: InsertTruck): Promise<Truck>;
-  updateTruck(id: string, truck: Partial<InsertTruck>): Promise<Truck | undefined>;
-  deleteTruck(id: string): Promise<void>;
+  async getTrucks() {
+    return Truck.find();
+  },
+  async getTruckById(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return Truck.findById(id);
+  },
+  async createTruck(truckData: any) {
+    return Truck.create(truckData);
+  },
+  async updateTruck(id: string, truckData: any) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return Truck.findByIdAndUpdate(id, truckData, { new: true });
+  },
+  async deleteTruck(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return Truck.findByIdAndDelete(id);
+  },
 
   // Report operations
-  getReports(): Promise<Report[]>;
-  createReport(report: InsertReport): Promise<Report>;
-  
-  sessionStore: session.SessionStore;
-}
+  async getReports() {
+    return Report.find().populate('trip');
+  },
+  async createReport(reportData: any) {
+    return Report.create(reportData);
+  },
 
-export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
-
-  constructor() {
-    this.sessionStore = new PostgresSessionStore({ 
-      pool, 
-      createTableIfMissing: true 
-    });
-  }
-
-  async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(insertUser)
-      .returning();
-    return user;
-  }
-
-  async getTrips(filters?: {
-    search?: string;
-    status?: string;
-    fuelType?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-  }): Promise<Trip[]> {
-    let query = db.select().from(trips);
-
-    // Apply filters
-    const conditions = [];
-
-    if (filters?.search) {
-      conditions.push(
-        or(
-          ilike(trips.conductor, `%${filters.search}%`),
-          ilike(trips.camion, `%${filters.search}%`),
-          ilike(trips.origen, `%${filters.search}%`),
-          ilike(trips.destino, `%${filters.search}%`)
-        )
-      );
-    }
-
-    if (filters?.status) {
-      conditions.push(eq(trips.estado, filters.status));
-    }
-
-    if (filters?.fuelType) {
-      conditions.push(eq(trips.combustible, filters.fuelType));
-    }
-
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as any;
-    }
-
-    // Apply sorting
-    const sortField = filters?.sortBy || 'fecha_salida';
-    const sortOrder = filters?.sortOrder || 'desc';
-    
-    switch (sortField) {
-      case 'conductor':
-        query = (query as any).orderBy(sortOrder === 'asc' ? asc(trips.conductor) : desc(trips.conductor));
-        break;
-      case 'camion':
-        query = (query as any).orderBy(sortOrder === 'asc' ? asc(trips.camion) : desc(trips.camion));
-        break;
-      case 'combustible':
-        query = (query as any).orderBy(sortOrder === 'asc' ? asc(trips.combustible) : desc(trips.combustible));
-        break;
-      case 'estado':
-        query = (query as any).orderBy(sortOrder === 'asc' ? asc(trips.estado) : desc(trips.estado));
-        break;
-      default:
-        query = (query as any).orderBy(sortOrder === 'asc' ? asc(trips.fecha_salida) : desc(trips.fecha_salida));
-    }
-
-    return await (query as any);
-  }
-
-  async getTripById(id: string): Promise<Trip | undefined> {
-    const [trip] = await db.select().from(trips).where(eq(trips.id, id));
-    return trip || undefined;
-  }
-
-  async createTrip(trip: InsertTrip): Promise<Trip> {
-    const tripData = {
-      ...trip,
-      fecha_salida: trip.fecha_salida instanceof Date ? trip.fecha_salida : new Date(trip.fecha_salida),
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
-    
-    const [newTrip] = await db
-      .insert(trips)
-      .values(tripData)
-      .returning();
-    return newTrip;
-  }
-
-  async updateTrip(id: string, tripData: Partial<UpdateTrip>): Promise<Trip | undefined> {
-    const updateData: any = { ...tripData };
-    
-    // Convert fecha_salida to Date if it exists
-    if (updateData.fecha_salida) {
-      updateData.fecha_salida = new Date(updateData.fecha_salida);
-    }
-    
-    const [updatedTrip] = await db
-      .update(trips)
-      .set({
-        ...updateData,
-        updated_at: new Date(),
-      })
-      .where(eq(trips.id, id))
-      .returning();
-    return updatedTrip || undefined;
-  }
-
-  async deleteTrip(id: string): Promise<void> {
-    // Logical deletion - set status to "Cancelado"
-    await db
-      .update(trips)
-      .set({
-        estado: "Cancelado",
-        updated_at: new Date(),
-      })
-      .where(eq(trips.id, id));
-  }
-}
-
-export const storage = new DatabaseStorage();
+  // Session store placeholder
+  sessionStore: undefined, // Replace with a MongoDB session store if needed
+};

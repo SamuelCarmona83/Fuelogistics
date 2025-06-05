@@ -1,24 +1,21 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
+  # MongoDB Database
+  mongo:
+    image: mongo:7.0
     restart: unless-stopped
     environment:
-      POSTGRES_DB: fuel_truck_db
-      POSTGRES_USER: fuel_admin
-      POSTGRES_PASSWORD: fuel_secure_pass_2024
-      PGDATA: /var/lib/postgresql/data/pgdata
+      MONGO_INITDB_DATABASE: fuel_truck_db
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mongo_data:/data/db
       - ./init-db:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432"
+      - "27017:27017"
     networks:
       - fuel-truck-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fuel_admin -d fuel_truck_db"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,7 +28,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://fuel_admin:fuel_secure_pass_2024@postgres:5432/fuel_truck_db
+      MONGODB_URI: mongodb://mongo:27017/fuel_truck_db
       SESSION_SECRET: fuel_truck_session_secret_dev_2024
       PORT: 5000
     ports:
@@ -40,7 +37,7 @@ services:
       - .:/app
       - /app/node_modules
     depends_on:
-      postgres:
+      mongo:
         condition: service_healthy
     networks:
       - fuel-truck-network
@@ -55,13 +52,13 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://fuel_admin:fuel_secure_pass_2024@postgres:5432/fuel_truck_db
+      MONGODB_URI: mongodb://mongo:27017/fuel_truck_db
       SESSION_SECRET: fuel_truck_session_secret_prod_2024
       PORT: 5000
     ports:
       - "5000:5000"
     depends_on:
-      postgres:
+      mongo:
         condition: service_healthy
     networks:
       - fuel-truck-network
@@ -86,7 +83,7 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  mongo_data:
     driver: local
   redis_data:
     driver: local
