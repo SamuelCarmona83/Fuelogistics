@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { z } from 'zod';
 
 export interface IUser extends Document {
   username: string;
@@ -85,3 +86,48 @@ const ReportSchema = new Schema<IReport>({
 });
 
 export const Report = mongoose.model<IReport>('Report', ReportSchema);
+
+// If you need Zod validation schemas for Trip, add them here:
+export const insertTripSchema = z.object({
+  conductor: z.string(),
+  camion: z.string(),
+  combustible: z.string(),
+  origen: z.string(),
+  destino: z.string(),
+  estado: z.string(),
+  fecha_salida: z.coerce.date(),
+});
+
+export const updateTripSchema = insertTripSchema.partial();
+
+// Zod validation schemas for User
+export const insertUserSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+  role: z.string(),
+});
+export const updateUserSchema = insertUserSchema.partial();
+
+// Zod validation schemas for Driver
+export const insertDriverSchema = z.object({
+  name: z.string(),
+  license: z.string(),
+  phone: z.string(),
+});
+export const updateDriverSchema = insertDriverSchema.partial();
+
+// Zod validation schemas for Truck
+export const insertTruckSchema = z.object({
+  plate: z.string(),
+  truckModel: z.string(),
+  capacity: z.number(),
+});
+export const updateTruckSchema = insertTruckSchema.partial();
+
+// Zod validation schemas for Report
+export const insertReportSchema = z.object({
+  trip: z.string(), // Should be a valid ObjectId string
+  details: z.string(),
+  created_at: z.coerce.date().optional(),
+});
+export const updateReportSchema = insertReportSchema.partial();
