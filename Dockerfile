@@ -21,7 +21,7 @@ RUN npm ci
 COPY . .
 
 # Expose port
-EXPOSE 5000
+EXPOSE 5001
 
 # Start development server
 CMD ["npm", "run", "dev"]
@@ -54,6 +54,6 @@ COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
 
 USER nodejs
 
-EXPOSE 5000
+EXPOSE 5001
 
 CMD ["node", "dist/server/index.js"]
