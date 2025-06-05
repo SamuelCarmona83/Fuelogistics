@@ -1,5 +1,5 @@
 # Override file for local development
-version: '3.8'
+#version: '3.8'
 
 services:
   app-dev:
