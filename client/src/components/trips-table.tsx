@@ -210,8 +210,8 @@ export function TripsTable() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{trip.combustible}</TableCell>
-                      <TableCell>{trip.cantidad_litros.toLocaleString()} L</TableCell>
+                      <TableCell>{trip && trip.combustible}</TableCell>
+                      <TableCell>{trip.cantidad_litros && trip.cantidad_litros?.toLocaleString()} L</TableCell>
                       <TableCell>
                         {new Date(trip.fecha_salida).toLocaleString('es-ES', {
                           day: '2-digit',

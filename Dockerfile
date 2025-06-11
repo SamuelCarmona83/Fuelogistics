@@ -30,8 +30,11 @@ CMD ["npm", "run", "dev"]
 FROM base AS builder
 WORKDIR /app
 
-# Copy dependencies
-COPY --from=deps /app/node_modules ./node_modules
+# Copy package files and install ALL dependencies (including devDependencies for build)
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Copy source code
 COPY . .
 
 # Build the application
@@ -49,11 +52,11 @@ RUN adduser --system --uid 1001 nodejs
 
 # Copy built application
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
 
 USER nodejs
 
 EXPOSE 5001
 
-CMD ["node", "dist/server/index.js"]
+CMD ["node", "dist/index.js"]

@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Truck, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema } from "@shared/schema";
+import { z } from "zod";
+import { loginUserSchema, insertUserSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 export default function AuthPage() {
@@ -17,15 +18,21 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
 
   const loginForm = useForm({
-    resolver: zodResolver(insertUserSchema),
+    resolver: zodResolver(loginUserSchema),
     defaultValues: {
       username: "",
       password: "",
     },
   });
 
+  // Add a schema for the registration form that only requires username and password
+  const registerUserSchema = z.object({
+    username: z.string().min(3, "El usuario debe tener al menos 3 caracteres"),
+    password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  });
+
   const registerForm = useForm({
-    resolver: zodResolver(insertUserSchema),
+    resolver: zodResolver(registerUserSchema),
     defaultValues: {
       username: "",
       password: "",
@@ -42,7 +49,26 @@ export default function AuthPage() {
   };
 
   const onRegister = (data: any) => {
-    registerMutation.mutate(data);
+    if (!data.username || !data.password) {
+      alert("Por favor, completa todos los campos.");
+      return;
+    }
+    registerMutation.mutate(
+      { ...data, role: "user" },
+      {
+        onError: (error: any) => {
+          // Show a visible error message for registration failure
+          alert(
+            error?.message?.includes("Username already exists")
+              ? "El usuario ya existe. Por favor, elige otro correo."
+              : `Error al registrar: ${error.message}`
+          );
+        },
+        onSuccess: () => {
+          alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
+        },
+      }
+    );
   };
 
   return (

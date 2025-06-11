@@ -131,3 +131,9 @@ export const insertReportSchema = z.object({
   created_at: z.coerce.date().optional(),
 });
 export const updateReportSchema = insertReportSchema.partial();
+
+// Zod validation schema for user login
+export const loginUserSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+});

@@ -365,7 +365,9 @@ export function EnhancedTripsLogistics() {
                             {trip.combustible}
                           </Badge>
                           <div className="text-sm text-slate-500">
-                            {trip.cantidad_litros.toLocaleString()} L
+                            { trip.cantidad_litros && typeof trip.cantidad_litros === "number" && !isNaN(trip.cantidad_litros)
+                              ? trip.cantidad_litros.toLocaleString()
+                              : "0"} L
                           </div>
                         </div>
                       </TableCell>

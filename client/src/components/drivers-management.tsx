@@ -3,11 +3,9 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,14 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 const driverFormSchema = z.object({
-  nombre: z.string().min(2, "Nombre debe tener al menos 2 caracteres"),
-  cedula: z.string().min(7, "Cédula debe tener al menos 7 dígitos"),
-  telefono: z.string().min(10, "Teléfono debe tener al menos 10 dígitos"),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  licencia: z.string().min(5, "Número de licencia requerido"),
-  fecha_vencimiento_licencia: z.string(),
-  estado: z.enum(["activo", "inactivo", "suspendido"]),
-  experiencia_anos: z.number().min(0).max(50),
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  license: z.string().min(5, "Número de licencia requerido"),
+  phone: z.string().min(10, "Teléfono debe tener al menos 10 dígitos"),
 });
 
 type DriverFormData = z.infer<typeof driverFormSchema>;
@@ -32,40 +25,25 @@ type DriverFormData = z.infer<typeof driverFormSchema>;
 const mockDrivers = [
   {
     id: "1",
-    nombre: "Carlos Mendoza",
-    cedula: "12345678",
-    telefono: "3001234567",
-    email: "carlos.mendoza@email.com",
-    licencia: "C1-123456",
-    fecha_vencimiento_licencia: "2025-12-31",
-    estado: "activo",
-    experiencia_anos: 8,
+    name: "Carlos Mendoza",
+    license: "C1-123456",
+    phone: "3001234567",
     created_at: new Date(),
     updated_at: new Date(),
   },
   {
     id: "2",
-    nombre: "María González",
-    cedula: "87654321",
-    telefono: "3009876543",
-    email: "maria.gonzalez@email.com",
-    licencia: "C1-654321",
-    fecha_vencimiento_licencia: "2024-08-15",
-    estado: "activo",
-    experiencia_anos: 12,
+    name: "María González",
+    license: "C1-654321",
+    phone: "3009876543",
     created_at: new Date(),
     updated_at: new Date(),
   },
   {
     id: "3",
-    nombre: "José Ramírez",
-    cedula: "11223344",
-    telefono: "3001122334",
-    email: "jose.ramirez@email.com",
-    licencia: "C1-112233",
-    fecha_vencimiento_licencia: "2024-03-20",
-    estado: "suspendido",
-    experiencia_anos: 5,
+    name: "José Ramírez",
+    license: "C1-112233",
+    phone: "3001122334",
     created_at: new Date(),
     updated_at: new Date(),
   },
@@ -80,14 +58,9 @@ export function DriversManagement() {
   const form = useForm<DriverFormData>({
     resolver: zodResolver(driverFormSchema),
     defaultValues: {
-      nombre: "",
-      cedula: "",
-      telefono: "",
-      email: "",
-      licencia: "",
-      fecha_vencimiento_licencia: "",
-      estado: "activo",
-      experiencia_anos: 0,
+      name: "",
+      license: "",
+      phone: "",
     },
   });
 
@@ -150,14 +123,9 @@ export function DriversManagement() {
   const handleEdit = (driver: any) => {
     setEditingDriver(driver);
     form.reset({
-      nombre: driver.nombre,
-      cedula: driver.cedula,
-      telefono: driver.telefono,
-      email: driver.email || "",
-      licencia: driver.licencia,
-      fecha_vencimiento_licencia: driver.fecha_vencimiento_licencia,
-      estado: driver.estado,
-      experiencia_anos: driver.experiencia_anos,
+      name: driver.name,
+      license: driver.license,
+      phone: driver.phone,
     });
     setIsDialogOpen(true);
   };
@@ -170,30 +138,10 @@ export function DriversManagement() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "activo":
-        return "bg-green-100 text-green-800";
-      case "inactivo":
-        return "bg-gray-100 text-gray-800";
-      case "suspendido":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const isLicenseExpiringSoon = (expirationDate: string) => {
-    const expDate = new Date(expirationDate);
-    const today = new Date();
-    const daysUntilExpiration = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-    return daysUntilExpiration <= 30;
-  };
-
   const filteredDrivers = drivers.filter(driver =>
-    driver.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    driver.cedula.includes(searchTerm) ||
-    driver.telefono.includes(searchTerm)
+    driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    driver.license.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    driver.phone.includes(searchTerm)
   );
 
   return (
@@ -225,7 +173,7 @@ export function DriversManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="nombre"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Nombre Completo</FormLabel>
@@ -238,50 +186,7 @@ export function DriversManagement() {
                   />
                   <FormField
                     control={form.control}
-                    name="cedula"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cédula</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Número de cédula" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="telefono"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Teléfono</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Número de teléfono" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email (Opcional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="correo@ejemplo.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="licencia"
+                    name="license"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Número de Licencia</FormLabel>
@@ -292,58 +197,17 @@ export function DriversManagement() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="fecha_vencimiento_licencia"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Vencimiento de Licencia</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="experiencia_anos"
+                    name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Años de Experiencia</FormLabel>
+                        <FormLabel>Teléfono</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            min="0" 
-                            max="50" 
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                          />
+                          <Input placeholder="Número de teléfono" {...field} />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="estado"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Estado</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar estado" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="activo">Activo</SelectItem>
-                            <SelectItem value="inactivo">Inactivo</SelectItem>
-                            <SelectItem value="suspendido">Suspendido</SelectItem>
-                          </SelectContent>
-                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -374,7 +238,7 @@ export function DriversManagement() {
         </Dialog>
       </div>
 
-      {/* Search and Stats */}
+      {/* Search */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="md:col-span-1">
           <CardContent className="p-4">
@@ -389,36 +253,6 @@ export function DriversManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {drivers.filter(d => d.estado === "activo").length}
-              </div>
-              <div className="text-sm text-slate-600">Conductores Activos</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">
-                {drivers.filter(d => isLicenseExpiringSoon(d.fecha_vencimiento_licencia)).length}
-              </div>
-              <div className="text-sm text-slate-600">Licencias por Vencer</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {Math.round(drivers.reduce((acc, d) => acc + d.experiencia_anos, 0) / drivers.length)}
-              </div>
-              <div className="text-sm text-slate-600">Años Promedio Exp.</div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Drivers Table */}
@@ -430,11 +264,9 @@ export function DriversManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Conductor</TableHead>
-                <TableHead>Contacto</TableHead>
+                <TableHead>Nombre</TableHead>
                 <TableHead>Licencia</TableHead>
-                <TableHead>Experiencia</TableHead>
-                <TableHead>Estado</TableHead>
+                <TableHead>Teléfono</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -442,48 +274,13 @@ export function DriversManagement() {
               {filteredDrivers.map((driver) => (
                 <TableRow key={driver.id}>
                   <TableCell>
-                    <div>
-                      <div className="font-medium">{driver.nombre}</div>
-                      <div className="text-sm text-slate-500">CC: {driver.cedula}</div>
-                    </div>
+                    <div className="font-medium">{driver.name}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center text-sm">
-                        <Phone className="h-3 w-3 mr-1 text-slate-400" />
-                        {driver.telefono}
-                      </div>
-                      {driver.email && (
-                        <div className="flex items-center text-sm">
-                          <Mail className="h-3 w-3 mr-1 text-slate-400" />
-                          {driver.email}
-                        </div>
-                      )}
-                    </div>
+                    <div>{driver.license}</div>
                   </TableCell>
                   <TableCell>
-                    <div>
-                      <div className="font-medium">{driver.licencia}</div>
-                      <div className={`text-sm flex items-center ${
-                        isLicenseExpiringSoon(driver.fecha_vencimiento_licencia) 
-                          ? 'text-red-600' 
-                          : 'text-slate-500'
-                      }`}>
-                        <Calendar className="h-3 w-3 mr-1" />
-                        Vence: {new Date(driver.fecha_vencimiento_licencia).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Award className="h-4 w-4 mr-1 text-slate-400" />
-                      {driver.experiencia_anos} años
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(driver.estado)}>
-                      {driver.estado.charAt(0).toUpperCase() + driver.estado.slice(1)}
-                    </Badge>
+                    <div>{driver.phone}</div>
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
