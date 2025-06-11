@@ -80,7 +80,9 @@ export function StatsCards() {
             <div className="ml-4">
               <p className="text-sm font-medium text-slate-600">Litros Transportados</p>
               <p className="text-2xl font-bold text-slate-900">
-                {stats.litersTransported.toLocaleString()}
+                {typeof stats.litersTransported === "number" && !isNaN(stats.litersTransported)
+                  ? stats.litersTransported.toLocaleString()
+                  : "0"}
               </p>
             </div>
           </div>

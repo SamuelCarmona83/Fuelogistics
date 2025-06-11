@@ -45,7 +45,12 @@ export function EnhancedTripsLogistics() {
     refetchInterval: 10000, // Auto-refresh every 10 seconds for real-time updates
   });
 
-  const trips = tripsResponse?.trips || [];
+  // Normalize trip IDs so all trips have an 'id' property
+  const tripsRaw = Array.isArray((tripsResponse as any)?.trips) ? (tripsResponse as any).trips : [];
+  const trips = tripsRaw.map((trip: any) => ({
+    ...trip,
+    id: trip.id || trip._id,
+  }));
 
   // Status update mutations
   const updateTripStatusMutation = useMutation({
@@ -242,7 +247,11 @@ export function EnhancedTripsLogistics() {
               <Fuel className="h-5 w-5 text-purple-500" />
               <div>
                 <p className="text-sm font-medium text-slate-600">Volumen Total</p>
-                <p className="text-2xl font-bold text-purple-600">{(stats.totalVolume / 1000).toFixed(1)}K L</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {typeof stats.totalVolume === "number" && !isNaN(stats.totalVolume)
+                    ? (stats.totalVolume / 1000).toFixed(1) + "K L"
+                    : "0K L"}
+                </p>
               </div>
             </div>
           </CardContent>

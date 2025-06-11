@@ -21,6 +21,7 @@ interface TripModalProps {
 // Create a schema for the form that handles the datetime-local input
 const formSchema = insertTripSchema.extend({
   fecha_salida: z.string().min(1, "Fecha de salida es requerida"),
+  cantidad_litros: z.coerce.number().min(1, "Cantidad requerida").max(30000, "Máximo 30,000 litros"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -84,7 +85,7 @@ export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
         fecha_salida: new Date(data.fecha_salida).toISOString(),
       };
       
-      const response = await apiRequest("PUT", `/api/viajes/${trip.id}`, payload);
+      const response = await apiRequest("PUT", `/api/viajes/${trip.id || trip._id}`, payload);
       return response.json();
     },
     onSuccess: () => {

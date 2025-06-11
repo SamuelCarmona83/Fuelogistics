@@ -92,6 +92,19 @@ export function TripsTable() {
       <ChevronDown className="ml-1 h-3 w-3" />;
   };
 
+  // Normalize trip IDs so all trips have an 'id' property
+  const trips = Array.isArray(data?.trips)
+    ? data.trips.map((trip: any) => ({ ...trip, id: trip.id || trip._id }))
+    : [];
+
+  // Helper to merge filter-bar filters with sort fields
+  const handleFilterBarChange = (filtersPartial: { search?: string; status?: string; fuelType?: string }) => {
+    setFilters(prev => ({
+      ...prev,
+      ...filtersPartial,
+    }));
+  };
+
   if (error) {
     return (
       <Card>
@@ -104,7 +117,7 @@ export function TripsTable() {
 
   return (
     <>
-      <FilterBar onFiltersChange={setFilters} />
+      <FilterBar onFiltersChange={handleFilterBarChange} />
       
       <Card>
         <CardHeader>
@@ -181,14 +194,14 @@ export function TripsTable() {
                       <TableCell><Skeleton className="h-8 w-16" /></TableCell>
                     </TableRow>
                   ))
-                ) : data?.trips.length === 0 ? (
+                ) : trips.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8">
                       <p className="text-slate-500">No se encontraron viajes</p>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data?.trips.map((trip) => (
+                  trips.map((trip) => (
                     <TableRow key={trip.id} className="hover:bg-slate-50 transition-colors">
                       <TableCell>
                         <div className="flex items-center">
