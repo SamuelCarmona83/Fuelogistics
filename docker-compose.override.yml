@@ -5,7 +5,6 @@ services:
   app-dev:
     volumes:
       - .:/app
-      - /app/node_modules
     environment:
       NODE_ENV: development
       DATABASE_URL: mongodb://mongo:27017/fuel_truck_db

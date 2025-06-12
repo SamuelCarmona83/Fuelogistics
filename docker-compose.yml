@@ -33,6 +33,7 @@ services:
       PORT: 5001
     ports:
       - "5001:5001"
+      - "24678:24678" # Vite dev server
     volumes:
       - .:/app
       - /app/node_modules
