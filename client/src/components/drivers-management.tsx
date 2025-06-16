@@ -139,11 +139,25 @@ export function DriversManagement() {
     }
   };
 
-  const filteredDrivers = drivers.filter(driver =>
-    driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    driver.license.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    driver.phone.includes(searchTerm)
-  );
+  // TODO: Implement real-time updates using WebSockets or similar
+  // For now, we will just filter the drivers based on the search term
+  // This will be replaced with a more efficient solution later
+  const filteredDrivers = drivers.filter(driver => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const matchesName = driver.name?.toLowerCase().includes(searchLower);
+    const matchesLicense = driver.license?.toLowerCase().includes(searchLower);
+    const matchesPhone = driver.phone?.includes(searchTerm);
+    
+    return matchesName || matchesLicense || matchesPhone;
+  });
+
+  // Debug log
+  console.log('Search term:', searchTerm);
+  console.log('Total drivers:', drivers.length);
+  console.log('Filtered drivers:', filteredDrivers.length);
+  console.log('Drivers data:', drivers);
 
   return (
     <div className="space-y-6">
@@ -265,55 +279,80 @@ export function DriversManagement() {
           <CardTitle>Lista de Conductores</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Licencia</TableHead>
-                <TableHead>Teléfono</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredDrivers.map((driver) => (
-                <TableRow key={driver.id}>
-                  <TableCell>
-                    <div className="font-medium">{driver.name}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div>{driver.license}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div>{driver.phone}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(driver)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deleteDriverMutation.mutate(driver.id || driver._id || "")}
-                        className="text-red-600 hover:text-red-700"
-                        disabled={deleteDriverMutation.isPending}
-                      >
-                        {deleteDriverMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+              <span className="ml-2 text-slate-600">Cargando conductores...</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Licencia</TableHead>
+                  <TableHead>Teléfono</TableHead>
+                  <TableHead>Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredDrivers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8">
+                      <div className="text-slate-500">
+                        {searchTerm ? "No se encontraron conductores que coincidan con la búsqueda" : "No hay conductores registrados"}
+                      </div>
+                      {!searchTerm && (
+                        <div className="mt-2">
+                          <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)}>
+                            Crear primer conductor
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredDrivers.map((driver) => (
+                    <TableRow key={driver.id || driver._id}>
+                      <TableCell>
+                        <div className="font-medium">{driver.name}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div>{driver.license}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div>{driver.phone}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(driver)}
+                            disabled={updateDriverMutation.isPending}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => deleteDriverMutation.mutate(driver.id || driver._id || "")}
+                            className="text-red-600 hover:text-red-700"
+                            disabled={deleteDriverMutation.isPending}
+                          >
+                            {deleteDriverMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
