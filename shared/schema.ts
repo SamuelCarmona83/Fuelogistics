@@ -156,3 +156,110 @@ export const loginUserSchema = z.object({
   username: z.string(),
   password: z.string(),
 });
+
+// --- CONFIGURACIÓN DEL SISTEMA Y PREFERENCIAS DE USUARIO ---
+
+export interface ISystemConfig extends Document {
+  maxFuelCapacity: number;
+  autoRefreshInterval: number;
+  maxConcurrentTrips: number;
+  defaultFuelType: string;
+  timezone: string;
+  language: string;
+  enableNotifications: boolean;
+  enableRealTimeUpdates: boolean;
+  enableEmailAlerts: boolean;
+  maintenanceMode: boolean;
+}
+
+const SystemConfigSchema = new Schema<ISystemConfig>({
+  maxFuelCapacity: { type: Number, required: true },
+  autoRefreshInterval: { type: Number, required: true },
+  maxConcurrentTrips: { type: Number, required: true },
+  defaultFuelType: { type: String, required: true },
+  timezone: { type: String, required: true },
+  language: { type: String, required: true },
+  enableNotifications: { type: Boolean, required: true },
+  enableRealTimeUpdates: { type: Boolean, required: true },
+  enableEmailAlerts: { type: Boolean, required: true },
+  maintenanceMode: { type: Boolean, required: true },
+});
+
+export const SystemConfig = mongoose.model<ISystemConfig>("SystemConfig", SystemConfigSchema);
+
+export const systemConfigSchema = z.object({
+  maxFuelCapacity: z.number(),
+  autoRefreshInterval: z.number(),
+  maxConcurrentTrips: z.number(),
+  defaultFuelType: z.string(),
+  timezone: z.string(),
+  language: z.string(),
+  enableNotifications: z.boolean(),
+  enableRealTimeUpdates: z.boolean(),
+  enableEmailAlerts: z.boolean(),
+  maintenanceMode: z.boolean(),
+});
+
+export type SystemConfigType = z.infer<typeof systemConfigSchema>;
+
+export interface IUserPreferences extends Document {
+  userId: string; // referencia al usuario
+  theme: string;
+  dashboardRefresh: boolean;
+  soundAlerts: boolean;
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  defaultView: string;
+}
+
+const UserPreferencesSchema = new Schema<IUserPreferences>({
+  userId: { type: String, required: true, unique: true },
+  theme: { type: String, required: true },
+  dashboardRefresh: { type: Boolean, required: true },
+  soundAlerts: { type: Boolean, required: true },
+  emailNotifications: { type: Boolean, required: true },
+  smsNotifications: { type: Boolean, required: true },
+  defaultView: { type: String, required: true },
+});
+
+export const UserPreferences = mongoose.model<IUserPreferences>("UserPreferences", UserPreferencesSchema);
+
+export const userPreferencesSchema = z.object({
+  userId: z.string(),
+  theme: z.string(),
+  dashboardRefresh: z.boolean(),
+  soundAlerts: z.boolean(),
+  emailNotifications: z.boolean(),
+  smsNotifications: z.boolean(),
+  defaultView: z.string(),
+});
+
+export type UserPreferencesType = z.infer<typeof userPreferencesSchema>;
+
+export interface ISecuritySettings extends Document {
+  sessionTimeout: number;
+  passwordExpiry: number;
+  maxLoginAttempts: number;
+  twoFactorAuth: boolean;
+  auditLogging: boolean;
+}
+
+const SecuritySettingsSchema = new Schema<ISecuritySettings>({
+  sessionTimeout: { type: Number, required: true },
+  passwordExpiry: { type: Number, required: true },
+  maxLoginAttempts: { type: Number, required: true },
+  twoFactorAuth: { type: Boolean, required: true },
+  auditLogging: { type: Boolean, required: true },
+});
+
+export const SecuritySettings = mongoose.model<ISecuritySettings>("SecuritySettings", SecuritySettingsSchema);
+
+export const securitySettingsSchema = z.object({
+  sessionTimeout: z.number(),
+  passwordExpiry: z.number(),
+  maxLoginAttempts: z.number(),
+  twoFactorAuth: z.boolean(),
+  auditLogging: z.boolean(),
+});
+
+export type SecuritySettingsType = z.infer<typeof securitySettingsSchema>;

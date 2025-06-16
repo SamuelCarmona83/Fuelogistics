@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,51 @@ import {
   Activity
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export function SettingsManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  // System Configuration State
+  // --- CARGA DE DATOS DESDE EL BACKEND ---
+  // Configuración del sistema
+  const { data: systemConfigData, isLoading: loadingSystemConfig } = useQuery({
+    queryKey: ["/api/system-config"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/system-config");
+      return res.json();
+    },
+  });
+  // Preferencias de usuario
+  const { data: userPreferencesData, isLoading: loadingUserPrefs } = useQuery({
+    queryKey: ["/api/user-preferences"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/user-preferences");
+      return res.json();
+    },
+    enabled: !!user,
+  });
+  // Configuración de seguridad
+  const { data: securitySettingsData, isLoading: loadingSecurity } = useQuery({
+    queryKey: ["/api/security-settings"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/security-settings");
+      return res.json();
+    },
+  });
+  // Estadísticas del sistema
+  const { data: systemStats, isLoading: loadingStats, refetch: refetchStats } = useQuery({
+    queryKey: ["/api/system-stats"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/system-stats");
+      return res.json();
+    },
+    refetchInterval: 5000, // Actualiza cada 5 segundos
+  });
+
+  // Estados locales sincronizados con backend
   const [systemConfig, setSystemConfig] = useState({
     maxFuelCapacity: 30000,
     autoRefreshInterval: 30,
@@ -44,8 +82,6 @@ export function SettingsManagement() {
     enableEmailAlerts: false,
     maintenanceMode: false,
   });
-
-  // User Preferences State
   const [userPreferences, setUserPreferences] = useState({
     theme: "light",
     dashboardRefresh: true,
@@ -54,85 +90,106 @@ export function SettingsManagement() {
     smsNotifications: false,
     defaultView: "dashboard",
   });
-
-  // Security Settings State
   const [securitySettings, setSecuritySettings] = useState({
-    sessionTimeout: 480, // 8 hours in minutes
-    passwordExpiry: 90, // days
+    sessionTimeout: 480,
+    passwordExpiry: 90,
     maxLoginAttempts: 5,
     twoFactorAuth: false,
     auditLogging: true,
   });
 
-  const handleSaveSystemConfig = async () => {
-    setIsLoading(true);
-    try {
-      // In a real implementation, this would save to the backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  // Sincronizar estados locales cuando llegan los datos del backend
+  useEffect(() => {
+    if (systemConfigData) setSystemConfig(systemConfigData);
+  }, [systemConfigData]);
+  useEffect(() => {
+    if (userPreferencesData) setUserPreferences({ ...userPreferencesData, userId: undefined });
+  }, [userPreferencesData]);
+  useEffect(() => {
+    if (securitySettingsData) setSecuritySettings(securitySettingsData);
+  }, [securitySettingsData]);
+
+  // --- MUTACIONES PARA GUARDAR ---
+  const saveSystemConfigMutation = useMutation({
+    mutationFn: async (data: typeof systemConfig) => {
+      const res = await apiRequest("PUT", "/api/system-config", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config"] });
       toast({
         title: "Configuración guardada",
         description: "La configuración del sistema ha sido actualizada",
       });
-    } catch (error) {
+    },
+    onError: (error: unknown) => {
       toast({
         title: "Error",
-        description: "No se pudo guardar la configuración",
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSaveUserPreferences = async () => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    },
+  });
+  const saveUserPreferencesMutation = useMutation({
+    mutationFn: async (data: typeof userPreferences) => {
+      const res = await apiRequest("PUT", "/api/user-preferences", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user-preferences"] });
       toast({
         title: "Preferencias guardadas",
         description: "Tus preferencias han sido actualizadas",
       });
-    } catch (error) {
+    },
+    onError: (error: unknown) => {
       toast({
         title: "Error",
-        description: "No se pudieron guardar las preferencias",
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
+  const saveSecuritySettingsMutation = useMutation({
+    mutationFn: async (data: typeof securitySettings) => {
+      const res = await apiRequest("PUT", "/api/security-settings", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/security-settings"] });
+      toast({
+        title: "Seguridad guardada",
+        description: "La configuración de seguridad ha sido actualizada",
+      });
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive",
+      });
+    },
+  });
 
-  const handleTestConnection = async () => {
+  // Handlers para guardar
+  function handleSaveSystemConfig() {
     setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast({
-        title: "Conexión exitosa",
-        description: "La conexión a la base de datos está funcionando correctamente",
-      });
-    } catch (error) {
-      toast({
-        title: "Error de conexión",
-        description: "No se pudo conectar a la base de datos",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // System statistics (would come from real API in production)
-  const systemStats = {
-    uptime: "15 días, 4 horas",
-    totalUsers: 3,
-    activeConnections: 2,
-    databaseSize: "245 MB",
-    lastBackup: "2024-06-04 02:00:00",
-    cpuUsage: 23,
-    memoryUsage: 67,
-    diskUsage: 34,
-  };
+    saveSystemConfigMutation.mutate(systemConfig, {
+      onSettled: () => setIsLoading(false),
+    });
+  }
+  function handleSaveUserPreferences() {
+    setIsLoading(true);
+    saveUserPreferencesMutation.mutate(userPreferences, {
+      onSettled: () => setIsLoading(false),
+    });
+  }
+  function handleSaveSecuritySettings() {
+    setIsLoading(true);
+    saveSecuritySettingsMutation.mutate(securitySettings, {
+      onSettled: () => setIsLoading(false),
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -149,7 +206,7 @@ export function SettingsManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Tiempo Activo</p>
-                <p className="text-lg font-semibold">{systemStats.uptime}</p>
+                <p className="text-lg font-semibold">{loadingStats ? '...' : systemStats?.uptime ?? '-'}</p>
               </div>
               <Activity className="h-8 w-8 text-green-500" />
             </div>
@@ -160,7 +217,7 @@ export function SettingsManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Usuarios Activos</p>
-                <p className="text-lg font-semibold">{systemStats.activeConnections}/{systemStats.totalUsers}</p>
+                <p className="text-lg font-semibold">{loadingStats ? '...' : `${systemStats?.activeConnections ?? '-'} / ${systemStats?.totalUsers ?? '-'}`}</p>
               </div>
               <Users className="h-8 w-8 text-blue-500" />
             </div>
@@ -171,7 +228,7 @@ export function SettingsManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Base de Datos</p>
-                <p className="text-lg font-semibold">{systemStats.databaseSize}</p>
+                <p className="text-lg font-semibold">{loadingStats ? '...' : systemStats?.databaseSize ?? '-'}</p>
               </div>
               <Database className="h-8 w-8 text-purple-500" />
             </div>
@@ -182,7 +239,7 @@ export function SettingsManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Uso de CPU</p>
-                <p className="text-lg font-semibold">{systemStats.cpuUsage}%</p>
+                <p className="text-lg font-semibold">{loadingStats ? '...' : `${systemStats?.cpuUsage ?? '-'}%`}</p>
               </div>
               <Activity className="h-8 w-8 text-orange-500" />
             </div>
@@ -488,7 +545,7 @@ export function SettingsManagement() {
                   }))}
                 />
               </div>
-              <Button onClick={handleTestConnection} disabled={isLoading} variant="outline" className="w-full">
+              <Button onClick={handleSaveSecuritySettings} disabled={isLoading} variant="outline" className="w-full">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 {isLoading ? "Probando..." : "Probar Conexión BD"}
               </Button>
@@ -519,25 +576,25 @@ export function SettingsManagement() {
               <TableRow>
                 <TableCell>Servidor de Base de Datos</TableCell>
                 <TableCell><Badge className="bg-green-100 text-green-800">Activo</Badge></TableCell>
-                <TableCell>{systemStats.databaseSize}</TableCell>
-                <TableCell>{systemStats.lastBackup}</TableCell>
+                <TableCell>{loadingStats ? '...' : systemStats?.databaseSize ?? '-'}</TableCell>
+                <TableCell>{loadingStats ? '...' : systemStats?.lastBackup ?? '-'}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Uso de CPU</TableCell>
                 <TableCell><Badge className="bg-blue-100 text-blue-800">Normal</Badge></TableCell>
-                <TableCell>{systemStats.cpuUsage}%</TableCell>
+                <TableCell>{loadingStats ? '...' : `${systemStats?.cpuUsage ?? '-'}%`}</TableCell>
                 <TableCell>En tiempo real</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Uso de Memoria</TableCell>
                 <TableCell><Badge className="bg-yellow-100 text-yellow-800">Moderado</Badge></TableCell>
-                <TableCell>{systemStats.memoryUsage}%</TableCell>
+                <TableCell>{loadingStats ? '...' : `${systemStats?.memoryUsage ?? '-'}%`}</TableCell>
                 <TableCell>En tiempo real</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Espacio en Disco</TableCell>
                 <TableCell><Badge className="bg-green-100 text-green-800">Óptimo</Badge></TableCell>
-                <TableCell>{systemStats.diskUsage}%</TableCell>
+                <TableCell>{loadingStats ? '...' : `${systemStats?.diskUsage ?? '-'}%`}</TableCell>
                 <TableCell>En tiempo real</TableCell>
               </TableRow>
             </TableBody>

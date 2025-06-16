@@ -107,6 +107,54 @@ export const storage = {
     return Report.create(reportData);
   },
 
+  // --- CONFIGURACIÓN DEL SISTEMA Y PREFERENCIAS DE USUARIO ---
+  async getSystemConfig() {
+    // Solo debe haber un documento de configuración global
+    const config = await (await import("../shared/schema")).SystemConfig.findOne();
+    return config;
+  },
+  async saveSystemConfig(data: any) {
+    const { SystemConfig } = await import("../shared/schema");
+    let config = await SystemConfig.findOne();
+    if (!config) {
+      config = new SystemConfig(data);
+    } else {
+      Object.assign(config, data);
+    }
+    await config.save();
+    return config;
+  },
+  async getUserPreferences(userId: string) {
+    const { UserPreferences } = await import("../shared/schema");
+    return UserPreferences.findOne({ userId });
+  },
+  async saveUserPreferences(userId: string, data: any) {
+    const { UserPreferences } = await import("../shared/schema");
+    let prefs = await UserPreferences.findOne({ userId });
+    if (!prefs) {
+      prefs = new UserPreferences({ ...data, userId });
+    } else {
+      Object.assign(prefs, data);
+    }
+    await prefs.save();
+    return prefs;
+  },
+  async getSecuritySettings() {
+    const { SecuritySettings } = await import("../shared/schema");
+    return SecuritySettings.findOne();
+  },
+  async saveSecuritySettings(data: any) {
+    const { SecuritySettings } = await import("../shared/schema");
+    let config = await SecuritySettings.findOne();
+    if (!config) {
+      config = new SecuritySettings(data);
+    } else {
+      Object.assign(config, data);
+    }
+    await config.save();
+    return config;
+  },
+
   // Session store for MongoDB
   sessionStore: MongoStore.create({
     mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/fuel_truck_db',

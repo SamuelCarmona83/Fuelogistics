@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertTripSchema, updateTripSchema, insertDriverSchema, updateDriverSchema } from "@shared/schema";
+import { insertTripSchema, updateTripSchema, insertDriverSchema, updateDriverSchema, systemConfigSchema, userPreferencesSchema, securitySettingsSchema } from "@shared/schema";
 import { z } from "zod";
 
 // WebSocket connections store
@@ -230,6 +230,129 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error deleting driver:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // --- ENDPOINTS DE CONFIGURACIÓN Y PREFERENCIAS ---
+  // Configuración global del sistema
+  app.get("/api/system-config", requireAuth, async (req, res) => {
+    const config = await storage.getSystemConfig();
+    res.json(config);
+  });
+  app.put("/api/system-config", requireAuth, async (req, res) => {
+    try {
+      const data = systemConfigSchema.parse(req.body);
+      const config = await storage.saveSystemConfig(data);
+      res.json(config);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message });
+    }
+  });
+
+  // Preferencias de usuario (por usuario autenticado)
+  app.get("/api/user-preferences", requireAuth, async (req, res) => {
+    const userId = req.user && req.user._id ? String(req.user._id) : undefined;
+    if (!userId) return res.status(400).json({ message: "No user id" });
+    const prefs = await storage.getUserPreferences(userId);
+    res.json(prefs);
+  });
+  app.put("/api/user-preferences", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user && req.user._id ? String(req.user._id) : undefined;
+      if (!userId) return res.status(400).json({ message: "No user id" });
+      const data = userPreferencesSchema.omit({ userId: true }).parse(req.body);
+      const prefs = await storage.saveUserPreferences(userId, data);
+      res.json(prefs);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message });
+    }
+  });
+
+  // Configuración de seguridad (global)
+  app.get("/api/security-settings", requireAuth, async (req, res) => {
+    const config = await storage.getSecuritySettings();
+    res.json(config);
+  });
+  app.put("/api/security-settings", requireAuth, async (req, res) => {
+    try {
+      const data = securitySettingsSchema.parse(req.body);
+      const config = await storage.saveSecuritySettings(data);
+      res.json(config);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message });
+    }
+  });
+
+  // --- SYSTEM STATS ENDPOINT ---
+  app.get("/api/system-stats", requireAuth, async (req, res) => {
+    try {
+      // Uptime del proceso Node
+      const uptime = Math.floor(process.uptime()); // segundos
+      // Usuarios totales
+      const { User } = await import("../shared/schema");
+      const totalUsers = await User.countDocuments();
+      // Conexiones activas (aprox. sesiones activas en Mongo)
+      let activeConnections = 0;
+      try {
+        const mongooseMod = await import("mongoose");
+        const db = mongooseMod.default.connection.db;
+        if (db && typeof db.admin === 'function') {
+          const admin = db.admin();
+          const serverStatus = await admin.serverStatus();
+          activeConnections = serverStatus.connections ? serverStatus.connections.current : 0;
+        }
+      } catch {
+        activeConnections = 0;
+      }
+      // Tamaño de la base de datos (MB aprox)
+      let databaseSize = '-';
+      try {
+        const mongooseMod = await import("mongoose");
+        const db = mongooseMod.default.connection.db;
+        if (db) {
+          const stats = await db.stats();
+          databaseSize = (stats.dataSize / 1024 / 1024).toFixed(2) + ' MB';
+        }
+      } catch {
+        databaseSize = '-';
+      }
+      // Último backup (no implementado, placeholder)
+      const lastBackup = '-';
+      // Uso de CPU y memoria (Node.js/os)
+      const os = await import('os');
+      const cpuUsage = (process.cpuUsage().system / 1e6).toFixed(2); // ms
+      const totalMem = os.totalmem();
+      const freeMem = os.freemem();
+      const memoryUsage = (((totalMem - freeMem) / totalMem) * 100).toFixed(1); // %
+      // Espacio en disco (aprox, solo Linux/Mac, usando 'os' y 'df -k')
+      let diskUsage = '-';
+      try {
+        const { execSync } = await import('child_process');
+        const df = execSync('df -k /').toString().split('\n')[1];
+        const parts = df.trim().split(/\s+/);
+        if (parts.length >= 5) {
+          const used = parseInt(parts[2], 10);
+          const total = parseInt(parts[1], 10);
+          diskUsage = ((used / total) * 100).toFixed(1);
+        }
+      } catch {
+        diskUsage = '-';
+      }
+      res.json({
+        uptime,
+        totalUsers,
+        activeConnections,
+        databaseSize,
+        lastBackup,
+        cpuUsage,
+        memoryUsage,
+        diskUsage,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error obteniendo estadísticas del sistema" });
     }
   });
 
