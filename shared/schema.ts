@@ -23,6 +23,7 @@ export interface ITrip extends Document {
   origen: string;
   destino: string;
   estado: string;
+  cantidad_litros: number;
   fecha_salida: Date;
   created_at: Date;
   updated_at: Date;
@@ -35,6 +36,7 @@ const TripSchema = new Schema<ITrip>({
   origen: { type: String, required: true },
   destino: { type: String, required: true },
   estado: { type: String, required: true },
+  cantidad_litros: { type: Number, required: true },
   fecha_salida: { type: Date, required: true },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
@@ -95,10 +97,27 @@ export const insertTripSchema = z.object({
   origen: z.string(),
   destino: z.string(),
   estado: z.string(),
+  cantidad_litros: z.number().min(1, "Cantidad requerida").max(30000, "Máximo 30,000 litros"),
   fecha_salida: z.coerce.date(),
 });
 
 export const updateTripSchema = insertTripSchema.partial();
+
+// Type for frontend (without Document methods)
+export type Trip = {
+  id?: string;
+  _id?: string;
+  conductor: string;
+  camion: string;
+  combustible: string;
+  origen: string;
+  destino: string;
+  estado: string;
+  cantidad_litros: number;
+  fecha_salida: Date | string;
+  created_at?: Date;
+  updated_at?: Date;
+};
 
 // Zod validation schemas for User
 export const insertUserSchema = z.object({

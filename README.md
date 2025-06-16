@@ -32,25 +32,17 @@ Fuelogistics/
 
 ## Despliegue rápido con Docker Compose
 
-### Desarrollo
 1. Clona el repositorio:
    ```sh
    git clone <repo-url>
    cd Fuelogistics
    ```
 2. Copia o ajusta variables de entorno si es necesario (por defecto funciona localmente).
-3. Levanta el entorno de desarrollo con hot reload:
+3. Levanta todos los servicios:
    ```sh
-   docker-compose --profile dev up -d
+   docker-compose up --build
    ```
-4. Accede a la app en [http://localhost:5001](http://localhost:5001)
-
-### Producción
-1. Levanta todos los servicios en modo producción:
-   ```sh
-   docker-compose --profile prod up --build -d
-   ```
-4. Accede a la app en [http://localhost:5001](http://localhost:5001)
+4. Accede a la app en [http://localhost:3000](http://localhost:3000)
 
 ## Despliegue en producción
 
@@ -89,8 +81,7 @@ Fuelogistics/
 - **Docker:** Multi-stage build, persistencia de datos
 
 ## Scripts útiles
-- `docker-compose --profile dev up -d` — Entorno de desarrollo con hot reload
-- `docker-compose --profile prod up --build -d` — Despliegue en producción
+- `docker-compose up --build` — Despliegue local completo
 - `npm run dev:server` — Solo backend en modo desarrollo
 - `cd client && npm run dev` — Solo frontend en modo desarrollo
 
