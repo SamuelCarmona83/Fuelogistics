@@ -8,55 +8,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Plus, Search, Edit, Trash2, Phone, Mail, Calendar, Award } from "lucide-react";
+import { insertDriverSchema, type IDriver } from "@shared/schema";
+import { Plus, Search, Edit, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { z } from "zod";
 
-const driverFormSchema = z.object({
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-  license: z.string().min(5, "Número de licencia requerido"),
-  phone: z.string().min(10, "Teléfono debe tener al menos 10 dígitos"),
-});
+type DriverFormData = z.infer<typeof insertDriverSchema>;
 
-type DriverFormData = z.infer<typeof driverFormSchema>;
-
-// Mock data for demonstration
-const mockDrivers = [
-  {
-    id: "1",
-    name: "Carlos Mendoza",
-    license: "C1-123456",
-    phone: "3001234567",
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-  {
-    id: "2",
-    name: "María González",
-    license: "C1-654321",
-    phone: "3009876543",
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-  {
-    id: "3",
-    name: "José Ramírez",
-    license: "C1-112233",
-    phone: "3001122334",
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-];
+// Extended interface for frontend display
+interface Driver extends Omit<IDriver, '_id'> {
+  id?: string;
+  _id?: string;
+}
 
 export function DriversManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingDriver, setEditingDriver] = useState<any>(null);
+  const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   const form = useForm<DriverFormData>({
-    resolver: zodResolver(driverFormSchema),
+    resolver: zodResolver(insertDriverSchema),
     defaultValues: {
       name: "",
       license: "",
@@ -64,21 +37,25 @@ export function DriversManagement() {
     },
   });
 
-  // Using mock data for now - in real implementation this would fetch from API
-  const { data: drivers = mockDrivers, isLoading } = useQuery({
+  // Fetch drivers from API
+  const { data: driversResponse, isLoading } = useQuery({
     queryKey: ['/api/drivers'],
-    queryFn: () => Promise.resolve(mockDrivers),
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/drivers");
+      return response.json();
+    },
   });
+
+  // Normalize drivers data
+  const drivers: Driver[] = Array.isArray(driversResponse) ? driversResponse.map((driver: any) => ({
+    ...driver,
+    id: driver.id || driver._id,
+  })) : [];
 
   const createDriverMutation = useMutation({
     mutationFn: async (data: DriverFormData) => {
-      const newDriver = {
-        ...data,
-        id: Date.now().toString(),
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-      return newDriver;
+      const response = await apiRequest("POST", "/api/drivers", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/drivers'] });
@@ -89,11 +66,20 @@ export function DriversManagement() {
         description: "El conductor ha sido registrado exitosamente",
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const updateDriverMutation = useMutation({
     mutationFn: async (data: DriverFormData) => {
-      return { ...editingDriver, ...data, updated_at: new Date() };
+      if (!editingDriver) throw new Error("No driver to update");
+      const response = await apiRequest("PUT", `/api/drivers/${editingDriver.id || editingDriver._id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/drivers'] });
@@ -105,11 +91,19 @@ export function DriversManagement() {
         description: "Los datos del conductor han sido actualizados",
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const deleteDriverMutation = useMutation({
     mutationFn: async (id: string) => {
-      return id;
+      const response = await apiRequest("DELETE", `/api/drivers/${id}`);
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/drivers'] });
@@ -118,9 +112,16 @@ export function DriversManagement() {
         description: "El conductor ha sido removido del sistema",
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
-  const handleEdit = (driver: any) => {
+  const handleEdit = (driver: Driver) => {
     setEditingDriver(driver);
     form.reset({
       name: driver.name,
@@ -229,6 +230,9 @@ export function DriversManagement() {
                     type="submit" 
                     disabled={createDriverMutation.isPending || updateDriverMutation.isPending}
                   >
+                    {(createDriverMutation.isPending || updateDriverMutation.isPending) && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     {editingDriver ? "Actualizar" : "Crear"} Conductor
                   </Button>
                 </div>
@@ -294,10 +298,15 @@ export function DriversManagement() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => deleteDriverMutation.mutate(driver.id)}
+                        onClick={() => deleteDriverMutation.mutate(driver.id || driver._id || "")}
                         className="text-red-600 hover:text-red-700"
+                        disabled={deleteDriverMutation.isPending}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {deleteDriverMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </TableCell>

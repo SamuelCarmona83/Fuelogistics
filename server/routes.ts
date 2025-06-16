@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertTripSchema, updateTripSchema } from "@shared/schema";
+import { insertTripSchema, updateTripSchema, insertDriverSchema, updateDriverSchema } from "@shared/schema";
 import { z } from "zod";
 
 // WebSocket connections store
@@ -143,6 +143,92 @@ export function registerRoutes(app: Express): Server {
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting trip:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Driver routes - all protected
+  app.get("/api/drivers", requireAuth, async (req, res) => {
+    try {
+      const drivers = await storage.getDrivers();
+      res.json(drivers);
+    } catch (error) {
+      console.error("Error fetching drivers:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/drivers/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const driver = await storage.getDriverById(id);
+      if (!driver) {
+        return res.status(404).json({ message: "Driver not found" });
+      }
+      res.json(driver);
+    } catch (error) {
+      console.error("Error fetching driver:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/drivers", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertDriverSchema.parse(req.body);
+      const driver = await storage.createDriver(validatedData);
+      
+      // Broadcast driver creation to all connected clients
+      broadcastUpdate('DRIVER_CREATED', driver);
+      
+      res.status(201).json(driver);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error creating driver:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/drivers/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = updateDriverSchema.parse(req.body);
+      const driver = await storage.updateDriver(id, validatedData);
+      if (!driver) {
+        return res.status(404).json({ message: "Driver not found" });
+      }
+      
+      // Broadcast driver update to all connected clients
+      broadcastUpdate('DRIVER_UPDATED', driver);
+      
+      res.json(driver);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error updating driver:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/drivers/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteDriver(id);
+      
+      // Broadcast driver deletion to all connected clients
+      broadcastUpdate('DRIVER_DELETED', { id });
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting driver:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

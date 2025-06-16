@@ -1,16 +1,17 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { insertTripSchema, updateTripSchema, Trip } from "@shared/schema";
+import { insertTripSchema, updateTripSchema, Trip, type IDriver } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, Plus } from "lucide-react";
 import { z } from "zod";
+import { useState } from "react";
 
 interface TripModalProps {
   isOpen: boolean;
@@ -28,6 +29,21 @@ type FormData = z.infer<typeof formSchema>;
 export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
   const { toast } = useToast();
   const isEditing = !!trip;
+  const [showDriverForm, setShowDriverForm] = useState(false);
+
+  // Fetch drivers for the selector
+  const { data: driversResponse } = useQuery({
+    queryKey: ['/api/drivers'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/drivers");
+      return response.json();
+    },
+  });
+
+  // Normalize drivers data
+  const drivers: Array<IDriver & { id?: string; _id?: string }> = Array.isArray(driversResponse) 
+    ? driversResponse 
+    : [];
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -166,9 +182,34 @@ export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Conductor *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nombre completo del conductor" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar conductor" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {drivers.length === 0 ? (
+                          <div className="p-2">
+                            <div className="text-sm text-slate-500 mb-2">
+                              No hay conductores registrados
+                            </div>
+                            <div className="text-xs text-slate-400">
+                              Ve a la sección "Gestión de Conductores" para agregar conductores
+                            </div>
+                          </div>
+                        ) : (
+                          drivers.map((driver) => (
+                            <SelectItem 
+                              key={driver.id || driver._id} 
+                              value={driver.name}
+                            >
+                              {driver.name} - {driver.license}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
