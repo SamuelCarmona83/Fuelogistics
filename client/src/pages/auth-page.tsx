@@ -10,8 +10,13 @@ import { Truck, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { loginUserSchema, insertUserSchema } from "@shared/schema";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+
+// Cambiar el schema para permitir username o email
+const loginUserSchema = z.object({
+  username: z.string().min(3, "El usuario debe tener al menos 3 caracteres"),
+  password: z.string().min(1, "La contraseña es obligatoria"),
+});
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -106,11 +111,11 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Correo Electrónico</FormLabel>
+                            <FormLabel>Usuario o Correo</FormLabel>
                             <FormControl>
                               <Input
-                                type="email"
-                                placeholder="admin@fueltrucks.com"
+                                type="text"
+                                placeholder="admin o admin@email.com"
                                 {...field}
                               />
                             </FormControl>
@@ -159,11 +164,11 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Correo Electrónico</FormLabel>
+                            <FormLabel>Usuario o Correo</FormLabel>
                             <FormControl>
                               <Input
-                                type="email"
-                                placeholder="tu@email.com"
+                                type="text"
+                                placeholder="Ej: admin o tu@email.com"
                                 {...field}
                               />
                             </FormControl>

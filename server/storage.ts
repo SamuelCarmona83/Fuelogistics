@@ -23,6 +23,18 @@ export const storage = {
   async createUser(userData: { username: string; password: string; role: string }) {
     return User.create(userData);
   },
+  async getUsers() {
+    return User.find({}, { password: 0 }); // No exponer hash de password
+  },
+  async updateUser(id: string, data: Partial<{ username: string; password: string; role: string }>) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    // Si se actualiza password, debe ser hasheado fuera de aquí (en el endpoint)
+    return User.findByIdAndUpdate(id, data, { new: true, fields: { password: 0 } });
+  },
+  async deleteUser(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return User.findByIdAndDelete(id);
+  },
 
   // Trip operations
   async getTrips(filters: TripFilters = {}) {

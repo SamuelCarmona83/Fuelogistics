@@ -356,6 +356,59 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // --- ADMINISTRACIÓN DE USUARIOS ---
+  app.get("/api/users", requireAuth, async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Error al obtener usuarios" });
+    }
+  });
+
+  app.post("/api/users", requireAuth, async (req, res) => {
+    try {
+      const { username, password, role } = req.body;
+      if (!username || !password || !role) return res.status(400).json({ message: "Faltan campos obligatorios" });
+      const { hashPassword } = await import("./auth");
+      const hashed = await hashPassword(password);
+      const user = await storage.createUser({ username, password: hashed, role });
+      res.status(201).json({ _id: user._id, username: user.username, role: user.role });
+    } catch (error) {
+      res.status(500).json({ message: "Error al crear usuario" });
+    }
+  });
+
+  app.put("/api/users/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { username, password, role } = req.body;
+      let update: any = {};
+      if (username) update.username = username;
+      if (role) update.role = role;
+      if (password) {
+        const { hashPassword } = await import("./auth");
+        update.password = await hashPassword(password);
+      }
+      const user = await storage.updateUser(id, update);
+      if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+      res.json({ _id: user._id, username: user.username, role: user.role });
+    } catch (error) {
+      res.status(500).json({ message: "Error al actualizar usuario" });
+    }
+  });
+
+  app.delete("/api/users/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const user = await storage.deleteUser(id);
+      if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Error al eliminar usuario" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Setup WebSocket server on a different path to avoid conflicts with Vite
