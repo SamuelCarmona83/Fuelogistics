@@ -12,6 +12,11 @@ services:
       MONGODB_URI: mongodb://mongo:27017/fuel_truck_db
       SESSION_SECRET: ${SESSION_SECRET:-fuel_truck_session_secret_prod_2024}
       PORT: 5001
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-fuelogistics}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-fuelogistics123}
+      MINIO_BUCKET: fuelogistics-files
+      MINIO_USE_SSL: false
     ports:
       - "5001:5001"
     depends_on:

@@ -6,11 +6,13 @@ Fuelogistics es una aplicación full-stack para la gestión logística de camion
 
 - **Autenticación de usuarios** (registro, login, sesiones seguras)
 - **Gestión de viajes**: crear, editar, cancelar y visualizar viajes de combustible
-- **Gestión de conductores**: CRUD de conductores
+- **Gestión de conductores**: CRUD de conductores con fotos y documentos
+- **Gestión de camiones**: CRUD de camiones con fotos y documentos
+- **Subida de archivos**: MinIO integrado para almacenamiento de imágenes y documentos
 - **Dashboard**: estadísticas en tiempo real, filtros y exportación de datos
 - **Notificaciones en tiempo real** (WebSocket)
 - **Validación robusta** (Zod, validaciones backend y frontend)
-- **Despliegue con Docker Compose** (multi-contenedor: frontend, backend, MongoDB)
+- **Despliegue con Docker Compose** (multi-contenedor: frontend, backend, MongoDB, MinIO)
 
 ## Estructura del proyecto
 
@@ -23,8 +25,32 @@ Fuelogistics/
 ├── shared/                # Schemas y validaciones compartidas
 ├── docker-compose.yml     # Configuración multi-contenedor
 ├── Dockerfile             # Build de frontend
+├── MINIO_INTEGRATION.md   # Documentación de MinIO
 └── README.md
 ```
+
+## Servicios incluidos
+
+- **Frontend**: React + Vite + TypeScript (puerto 5001)
+- **Backend**: Express + MongoDB (puerto 5001)
+- **Base de datos**: MongoDB (puerto 27017)
+- **Almacenamiento**: MinIO (puerto 9000/9001)
+- **Cache**: Redis (puerto 6379, opcional)
+
+## Acceso a servicios
+
+- **Aplicación**: http://localhost:5001
+- **MinIO Console**: http://localhost:9001 (usuario: fuelogistics, password: fuelogistics123)
+- **MongoDB**: localhost:27017
+
+## Funcionalidades de archivos
+
+- **Subida de archivos**: Imágenes, PDFs, documentos Office
+- **Almacenamiento público**: Archivos accesibles via URL directa
+- **Integración**: Adjuntar archivos a viajes, conductores y camiones
+- **Gestión**: Subir, ver y eliminar archivos
+
+Para más información sobre MinIO, consulta [MINIO_INTEGRATION.md](MINIO_INTEGRATION.md).
 
 ## Requisitos previos
 - Docker y Docker Compose

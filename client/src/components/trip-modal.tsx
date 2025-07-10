@@ -11,6 +11,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, X } from "lucide-react";
 import { z } from "zod";
+import { FileUpload } from "@/components/file-upload";
 
 interface TripModalProps {
   isOpen: boolean;
@@ -309,6 +310,25 @@ export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* File Upload Section */}
+            <div className="space-y-4">
+              <div className="border-t pt-4">
+                <FileUpload
+                  onUpload={(files) => {
+                    toast({
+                      title: "Archivos subidos",
+                      description: `Se subieron ${files.length} archivo(s) exitosamente.`,
+                    });
+                  }}
+                  multiple={true}
+                  maxFiles={5}
+                  label="Adjuntar documentos"
+                  description="Puedes subir imágenes, documentos de Word, Excel o PDFs relacionados con este viaje"
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-end space-x-3 pt-6 border-t border-slate-200">

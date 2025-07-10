@@ -31,6 +31,11 @@ services:
       MONGODB_URI: mongodb://mongo:27017/fuel_truck_db
       SESSION_SECRET: fuel_truck_session_secret_dev_2024
       PORT: 5001
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: fuelogistics
+      MINIO_SECRET_KEY: fuelogistics123
+      MINIO_BUCKET: fuelogistics-files
+      MINIO_USE_SSL: false
     ports:
       - "5001:5001"
       - "24678:24678" # Vite dev server
@@ -56,6 +61,11 @@ services:
       MONGODB_URI: mongodb://mongo:27017/fuel_truck_db
       SESSION_SECRET: fuel_truck_session_secret_prod_2024
       PORT: 5001
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: fuelogistics
+      MINIO_SECRET_KEY: fuelogistics123
+      MINIO_BUCKET: fuelogistics-files
+      MINIO_USE_SSL: false
     ports:
       - "5001:5001"
     depends_on:

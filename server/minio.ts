@@ -1,8 +1,13 @@
 import { Client } from 'minio';
 
+const minioEndpoint = process.env.MINIO_ENDPOINT || 'http://localhost:9000';
+const endpointParts = minioEndpoint.replace(/^https?:\/\//, '').split(':');
+const endPoint = endpointParts[0];
+const port = parseInt(endpointParts[1] || '9000');
+
 const minioClient = new Client({
-  endPoint: process.env.MINIO_ENDPOINT?.replace('http://', '') || 'localhost',
-  port: 9000,
+  endPoint,
+  port,
   useSSL: process.env.MINIO_USE_SSL === 'true',
   accessKey: process.env.MINIO_ACCESS_KEY || 'fuelogistics',
   secretKey: process.env.MINIO_SECRET_KEY || 'fuelogistics123',
@@ -57,7 +62,7 @@ export async function uploadFile(fileName: string, fileBuffer: Buffer, contentTy
     });
     
     // Return the public URL
-    const publicUrl = `${process.env.MINIO_ENDPOINT || 'http://localhost:9000'}/${BUCKET_NAME}/${uniqueFileName}`;
+    const publicUrl = `${minioEndpoint}/${BUCKET_NAME}/${uniqueFileName}`;
     
     return {
       fileName: uniqueFileName,
@@ -84,7 +89,7 @@ export async function deleteFile(fileName: string) {
 export async function getFileUrl(fileName: string) {
   try {
     // For public buckets, we can return the direct URL
-    const publicUrl = `${process.env.MINIO_ENDPOINT || 'http://localhost:9000'}/${BUCKET_NAME}/${fileName}`;
+    const publicUrl = `${minioEndpoint}/${BUCKET_NAME}/${fileName}`;
     return publicUrl;
   } catch (error) {
     console.error('Error getting file URL:', error);
