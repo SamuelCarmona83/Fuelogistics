@@ -25,9 +25,22 @@ export interface ITrip extends Document {
   estado: string;
   cantidad_litros: number;
   fecha_salida: Date;
+  attachments?: Array<{
+    fileName: string;
+    originalName: string;
+    url: string;
+    uploadedAt: Date;
+  }>;
   created_at: Date;
   updated_at: Date;
 }
+
+const AttachmentSchema = new Schema({
+  fileName: { type: String, required: true },
+  originalName: { type: String, required: true },
+  url: { type: String, required: true },
+  uploadedAt: { type: Date, default: Date.now },
+});
 
 const TripSchema = new Schema<ITrip>({
   conductor: { type: String, required: true },
@@ -38,6 +51,7 @@ const TripSchema = new Schema<ITrip>({
   estado: { type: String, required: true },
   cantidad_litros: { type: Number, required: true },
   fecha_salida: { type: Date, required: true },
+  attachments: [AttachmentSchema],
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
 });
@@ -49,12 +63,26 @@ export interface IDriver extends Document {
   name: string;
   license: string;
   phone: string;
+  photo?: {
+    fileName: string;
+    originalName: string;
+    url: string;
+    uploadedAt: Date;
+  };
+  documents?: Array<{
+    fileName: string;
+    originalName: string;
+    url: string;
+    uploadedAt: Date;
+  }>;
 }
 
 const DriverSchema = new Schema<IDriver>({
   name: { type: String, required: true },
   license: { type: String, required: true },
   phone: { type: String, required: true },
+  photo: AttachmentSchema,
+  documents: [AttachmentSchema],
 });
 
 export const Driver = mongoose.model<IDriver>('Driver', DriverSchema);
@@ -64,12 +92,26 @@ export interface ITruck extends Document {
   plate: string;
   truckModel: string;
   capacity: number;
+  photo?: {
+    fileName: string;
+    originalName: string;
+    url: string;
+    uploadedAt: Date;
+  };
+  documents?: Array<{
+    fileName: string;
+    originalName: string;
+    url: string;
+    uploadedAt: Date;
+  }>;
 }
 
 const TruckSchema = new Schema<ITruck>({
   plate: { type: String, required: true, unique: true },
   truckModel: { type: String, required: true },
   capacity: { type: Number, required: true },
+  photo: AttachmentSchema,
+  documents: [AttachmentSchema],
 });
 
 export const Truck = mongoose.model<ITruck>('Truck', TruckSchema);
@@ -115,6 +157,12 @@ export type Trip = {
   estado: string;
   cantidad_litros: number;
   fecha_salida: Date | string;
+  attachments?: Array<{
+    fileName: string;
+    originalName: string;
+    url: string;
+    uploadedAt: Date;
+  }>;
   created_at?: Date;
   updated_at?: Date;
 };

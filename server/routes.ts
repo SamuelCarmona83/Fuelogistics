@@ -4,7 +4,38 @@ import { WebSocketServer } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertTripSchema, updateTripSchema } from "@shared/schema";
+import { uploadFile, deleteFile, getFileUrl } from "./minio";
 import { z } from "zod";
+import multer from "multer";
+
+// Configure multer for file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept images and common document types
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only images and documents are allowed.'));
+    }
+  },
+});
 
 // WebSocket connections store
 const wsConnections = new Set<any>();
@@ -144,6 +175,73 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error deleting trip:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // File upload routes
+  app.post("/api/upload", requireAuth, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const fileResult = await uploadFile(
+        req.file.originalname,
+        req.file.buffer,
+        req.file.mimetype
+      );
+
+      res.json({
+        message: "File uploaded successfully",
+        file: fileResult,
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Error uploading file" });
+    }
+  });
+
+  app.post("/api/upload/multiple", requireAuth, upload.array('files', 5), async (req, res) => {
+    try {
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+
+      const uploadPromises = req.files.map(file => 
+        uploadFile(file.originalname, file.buffer, file.mimetype)
+      );
+
+      const uploadResults = await Promise.all(uploadPromises);
+
+      res.json({
+        message: "Files uploaded successfully",
+        files: uploadResults,
+      });
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      res.status(500).json({ message: "Error uploading files" });
+    }
+  });
+
+  app.delete("/api/files/:fileName", requireAuth, async (req, res) => {
+    try {
+      const { fileName } = req.params;
+      await deleteFile(fileName);
+      res.json({ message: "File deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      res.status(500).json({ message: "Error deleting file" });
+    }
+  });
+
+  app.get("/api/files/:fileName/url", requireAuth, async (req, res) => {
+    try {
+      const { fileName } = req.params;
+      const url = await getFileUrl(fileName);
+      res.json({ url });
+    } catch (error) {
+      console.error("Error getting file URL:", error);
+      res.status(500).json({ message: "Error getting file URL" });
     }
   });
 

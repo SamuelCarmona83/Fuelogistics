@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic, log } from "./static"; // <-- use static.ts for prod
 import { connectToMongoDB } from './db';
+import { initializeMinio } from './minio';
 import cors from "cors";
 
 const app = express();
@@ -47,6 +48,7 @@ app.use((req, res, next) => {
 
 (async () => {
   await connectToMongoDB();
+  await initializeMinio();
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
