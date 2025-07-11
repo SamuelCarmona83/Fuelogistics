@@ -18,11 +18,19 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+}
+
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Fetch full profile data
   const { data: profile } = useQuery({
@@ -35,7 +43,7 @@ export default function HomePage() {
   });
   
   // Initialize WebSocket connection for real-time updates
-  const addNotification = (notification: any) => {
+  const addNotification = (notification: Notification) => {
     setNotifications(prev => [notification, ...prev]);
   };
   

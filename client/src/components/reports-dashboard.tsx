@@ -17,7 +17,7 @@ export function ReportsDashboard() {
     queryKey: ['/api/viajes'],
   });
 
-  const tripsData = apiData?.trips || [];
+  const tripsData = (apiData as any)?.trips || [];
 
   // Process data for charts
   const processTripsData = () => {

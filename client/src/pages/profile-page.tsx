@@ -49,13 +49,6 @@ export default function ProfilePage() {
       const response = await apiRequest("GET", "/api/profile");
       return await response.json();
     },
-    onSuccess: (data) => {
-      setFormData({
-        name: data.profile?.name || "",
-        email: data.profile?.email || "",
-        phone: data.profile?.phone || "",
-      });
-    },
   });
 
   // Sync formData with profile changes

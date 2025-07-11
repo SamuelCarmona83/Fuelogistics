@@ -53,7 +53,7 @@ export async function uploadFile(fileName: string, fileBuffer: Buffer, contentTy
     // Add timestamp to filename to avoid conflicts
     const timestamp = Date.now();
     const uniqueFileName = `${timestamp}-${fileName}`;
-    await minioClient.putObject(BUCKET_NAME, uniqueFileName, fileBuffer, {
+    await minioClient.putObject(BUCKET_NAME, uniqueFileName, fileBuffer, fileBuffer.length, {
       'Content-Type': contentType,
     });
     // Return the public URL

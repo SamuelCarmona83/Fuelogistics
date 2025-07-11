@@ -249,7 +249,7 @@ export function registerRoutes(app: Express): Server {
   // Profile routes
   app.get("/api/profile", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUserById(req.user!._id.toString());
+      const user = await storage.getUserById((req.user as any)._id.toString());
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -274,7 +274,7 @@ export function registerRoutes(app: Express): Server {
   app.put("/api/profile", express.json(), requireAuth, async (req, res) => {
     try {
       const validatedData = updateProfileSchema.parse(req.body);
-      const userId = req.user!._id.toString();
+      const userId = (req.user as any)._id.toString();
       
       const updatedUser = await storage.updateUserProfile(userId, validatedData);
       if (!updatedUser) {
@@ -309,7 +309,7 @@ export function registerRoutes(app: Express): Server {
         req.file.buffer,
         req.file.mimetype
       );
-      const userId = req.user!._id.toString();
+      const userId = (req.user as any)._id.toString();
       const photoData = {
         fileName: fileResult.fileName,
         originalName: fileResult.originalName,
@@ -330,7 +330,7 @@ export function registerRoutes(app: Express): Server {
 
   app.delete("/api/profile/photo", requireAuth, async (req, res) => {
     try {
-      const userId = req.user!._id.toString();
+      const userId = (req.user as any)._id.toString();
       const user = await storage.getUserById(userId);
       if (!user || !user.profile?.photo) {
         return res.status(404).json({ message: "Profile photo not found" });
