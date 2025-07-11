@@ -36,6 +36,11 @@ services:
       - mongo_data:/data/db
     networks:
       - fuel-truck-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # MinIO for file storage
   minio:
@@ -54,17 +59,14 @@ services:
     networks:
       - fuel-truck-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      disable: true
 
   # MinIO bucket initialization
   minio-init:
     image: minio/mc:RELEASE.2024-01-13T08-44-48Z
     depends_on:
       minio:
-        condition: service_healthy
+        condition: service_started
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-fuelogistics}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-fuelogistics123}
