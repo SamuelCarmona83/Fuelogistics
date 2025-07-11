@@ -5,12 +5,37 @@ export interface IUser extends Document {
   username: string;
   password: string;
   role: string;
+  profile?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    photo?: {
+      fileName: string;
+      originalName: string;
+      url: string;
+      uploadedAt: Date;
+    };
+  };
 }
+
+// Define AttachmentSchema first as it's used in multiple schemas
+const AttachmentSchema = new Schema({
+  fileName: { type: String, required: true },
+  originalName: { type: String, required: true },
+  url: { type: String, required: true },
+  uploadedAt: { type: Date, default: Date.now },
+});
 
 const UserSchema = new Schema<IUser>({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, required: true },
+  profile: {
+    name: { type: String },
+    email: { type: String },
+    phone: { type: String },
+    photo: AttachmentSchema,
+  },
 });
 
 export const User = mongoose.model<IUser>('User', UserSchema);
@@ -34,13 +59,6 @@ export interface ITrip extends Document {
   created_at: Date;
   updated_at: Date;
 }
-
-const AttachmentSchema = new Schema({
-  fileName: { type: String, required: true },
-  originalName: { type: String, required: true },
-  url: { type: String, required: true },
-  uploadedAt: { type: Date, default: Date.now },
-});
 
 const TripSchema = new Schema<ITrip>({
   conductor: { type: String, required: true },
@@ -174,6 +192,13 @@ export const insertUserSchema = z.object({
   role: z.string(),
 });
 export const updateUserSchema = insertUserSchema.partial();
+
+// Zod validation schemas for User Profile
+export const updateProfileSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+});
 
 // Zod validation schemas for Driver
 export const insertDriverSchema = z.object({

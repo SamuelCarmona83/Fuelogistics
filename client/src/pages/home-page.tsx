@@ -4,6 +4,7 @@ import { useWebSocket } from "@/hooks/use-websocket";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Truck, User, LogOut, Plus, Bell, Settings, BarChart3, Users, FileText } from "lucide-react";
 import { StatsCards } from "@/components/stats-cards";
@@ -13,6 +14,9 @@ import { DriversManagement } from "@/components/drivers-management";
 import { ReportsDashboard } from "@/components/reports-dashboard";
 import { SettingsManagement } from "@/components/settings-management";
 import { EnhancedTripsLogistics } from "@/components/enhanced-trips-logistics";
+import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -23,6 +27,16 @@ export default function HomePage() {
     { id: 2, title: "Mantenimiento programado", message: "Camión XYZ789 requiere mantenimiento", time: "hace 1 hora", read: false },
     { id: 3, title: "Viaje cancelado", message: "Viaje hacia Estación Norte fue cancelado", time: "hace 2 horas", read: true },
   ]);
+
+  // Fetch full profile data
+  const { data: profile } = useQuery({
+    queryKey: ["/api/profile"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/profile");
+      return await response.json();
+    },
+    enabled: !!user,
+  });
   
   // Initialize WebSocket connection for real-time updates
   const addNotification = (notification: any) => {
@@ -39,6 +53,15 @@ export default function HomePage() {
 
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({...n, read: true})));
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map(word => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
@@ -106,22 +129,50 @@ export default function HomePage() {
           {/* User Menu */}
           <div className="border-t border-slate-200 p-4">
             <div className="flex items-center">
-              <div className="h-10 w-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center mr-3">
-                <User className="text-white h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 truncate">{user?.username}</p>
-                <p className="text-xs text-slate-500">Administrador del Sistema</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => logoutMutation.mutate()}
-                className="text-slate-400 hover:text-red-600 flex-shrink-0"
-                title="Cerrar Sesión"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center space-x-3 w-full p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage 
+                        src={profile?.profile?.photo?.url} 
+                        alt={profile?.profile?.name || user?.username || "Profile"} 
+                      />
+                      <AvatarFallback>
+                        {profile?.profile?.name 
+                          ? getInitials(profile.profile.name)
+                          : user?.username?.[0]?.toUpperCase() || "U"
+                        }
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-sm font-medium text-slate-900 truncate">
+                        {profile?.profile?.name || user?.username}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {user?.role === "admin" ? "Administrador del Sistema" : "Usuario"}
+                      </p>
+                    </div>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2" align="end">
+                  <div className="space-y-1">
+                    <Link href="/profile">
+                      <Button variant="ghost" className="w-full justify-start">
+                        <User className="mr-2 h-4 w-4" />
+                        Mi Perfil
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      onClick={() => logoutMutation.mutate()}
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Cerrar Sesión
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>

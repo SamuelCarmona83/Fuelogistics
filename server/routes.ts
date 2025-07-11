@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertTripSchema, updateTripSchema } from "@shared/schema";
+import { insertTripSchema, updateTripSchema, updateProfileSchema } from "@shared/schema";
 import { uploadFile, deleteFile, getFileUrl } from "./minio";
 import { z } from "zod";
 import multer from "multer";
@@ -242,6 +242,117 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error getting file URL:", error);
       res.status(500).json({ message: "Error getting file URL" });
+    }
+  });
+
+  // Profile routes
+  app.get("/api/profile", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserById(req.user!._id.toString());
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return profile data without password
+      const { password, ...userWithoutPassword } = user.toObject();
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/profile", requireAuth, async (req, res) => {
+    try {
+      const validatedData = updateProfileSchema.parse(req.body);
+      const userId = req.user!._id.toString();
+      
+      const updatedUser = await storage.updateUserProfile(userId, validatedData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return updated profile data without password
+      const { password, ...userWithoutPassword } = updatedUser.toObject();
+      res.json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/profile/photo", requireAuth, upload.single('photo'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No photo uploaded" });
+      }
+
+      // Only allow image files for profile photos
+      if (!req.file.mimetype.startsWith('image/')) {
+        return res.status(400).json({ message: "Only image files are allowed for profile photos" });
+      }
+
+      const fileResult = await uploadFile(
+        req.file.originalname,
+        req.file.buffer,
+        req.file.mimetype
+      );
+
+      const userId = req.user!._id.toString();
+      const photoData = {
+        fileName: fileResult.fileName,
+        originalName: fileResult.originalName,
+        url: fileResult.url,
+        uploadedAt: new Date(),
+      };
+
+      const updatedUser = await storage.updateUserProfilePhoto(userId, photoData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        message: "Profile photo updated successfully",
+        photo: photoData,
+      });
+    } catch (error) {
+      console.error("Error uploading profile photo:", error);
+      res.status(500).json({ message: "Error uploading profile photo" });
+    }
+  });
+
+  app.delete("/api/profile/photo", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!._id.toString();
+      const user = await storage.getUserById(userId);
+      
+      if (!user || !user.profile?.photo) {
+        return res.status(404).json({ message: "Profile photo not found" });
+      }
+
+      // Delete the file from MinIO
+      try {
+        await deleteFile(user.profile.photo.fileName);
+      } catch (error) {
+        console.warn("Error deleting file from MinIO:", error);
+        // Continue with database update even if MinIO deletion fails
+      }
+
+      const updatedUser = await storage.removeUserProfilePhoto(userId);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ message: "Profile photo deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting profile photo:", error);
+      res.status(500).json({ message: "Error deleting profile photo" });
     }
   });
 

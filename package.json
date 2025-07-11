@@ -48,6 +48,7 @@
     "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
+    "dotenv": "^17.2.0",
     "drizzle-zod": "^0.7.0",
     "embla-carousel-react": "^8.6.0",
     "express": "^4.21.2",

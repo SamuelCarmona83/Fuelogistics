@@ -23,6 +23,30 @@ export const storage = {
   async createUser(userData: { username: string; password: string; role: string }) {
     return User.create(userData);
   },
+  async updateUserProfile(id: string, profileData: any) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return User.findByIdAndUpdate(
+      id,
+      { $set: { profile: profileData } },
+      { new: true, upsert: false }
+    );
+  },
+  async updateUserProfilePhoto(id: string, photoData: any) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return User.findByIdAndUpdate(
+      id,
+      { $set: { 'profile.photo': photoData } },
+      { new: true, upsert: false }
+    );
+  },
+  async removeUserProfilePhoto(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    return User.findByIdAndUpdate(
+      id,
+      { $unset: { 'profile.photo': 1 } },
+      { new: true }
+    );
+  },
 
   // Trip operations
   async getTrips(filters: TripFilters = {}) {
