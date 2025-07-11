@@ -301,18 +301,14 @@ export function registerRoutes(app: Express): Server {
       if (!req.file) {
         return res.status(400).json({ message: "No photo uploaded" });
       }
-
-      // Only allow image files for profile photos
       if (!req.file.mimetype.startsWith('image/')) {
         return res.status(400).json({ message: "Only image files are allowed for profile photos" });
       }
-
       const fileResult = await uploadFile(
         req.file.originalname,
         req.file.buffer,
         req.file.mimetype
       );
-
       const userId = req.user!._id.toString();
       const photoData = {
         fileName: fileResult.fileName,
@@ -320,16 +316,12 @@ export function registerRoutes(app: Express): Server {
         url: fileResult.url,
         uploadedAt: new Date(),
       };
-
       const updatedUser = await storage.updateUserProfilePhoto(userId, photoData);
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
-
-      res.json({
-        message: "Profile photo updated successfully",
-        photo: photoData,
-      });
+      const { password, ...userWithoutPassword } = updatedUser.toObject();
+      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error uploading profile photo:", error);
       res.status(500).json({ message: "Error uploading profile photo" });
@@ -340,25 +332,20 @@ export function registerRoutes(app: Express): Server {
     try {
       const userId = req.user!._id.toString();
       const user = await storage.getUserById(userId);
-      
       if (!user || !user.profile?.photo) {
         return res.status(404).json({ message: "Profile photo not found" });
       }
-
-      // Delete the file from MinIO
       try {
         await deleteFile(user.profile.photo.fileName);
       } catch (error) {
         console.warn("Error deleting file from MinIO:", error);
-        // Continue with database update even if MinIO deletion fails
       }
-
       const updatedUser = await storage.removeUserProfilePhoto(userId);
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
-
-      res.json({ message: "Profile photo deleted successfully" });
+      const { password, ...userWithoutPassword } = updatedUser.toObject();
+      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error deleting profile photo:", error);
       res.status(500).json({ message: "Error deleting profile photo" });

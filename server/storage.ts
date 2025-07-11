@@ -25,9 +25,14 @@ export const storage = {
   },
   async updateUserProfile(id: string, profileData: any) {
     if (!Types.ObjectId.isValid(id)) return null;
+    const setObj: any = {};
+    if (profileData.name !== undefined) setObj['profile.name'] = profileData.name;
+    if (profileData.email !== undefined) setObj['profile.email'] = profileData.email;
+    if (profileData.phone !== undefined) setObj['profile.phone'] = profileData.phone;
+    // Do NOT touch profile.photo here!
     return User.findByIdAndUpdate(
       id,
-      { $set: { profile: profileData } },
+      { $set: setObj },
       { new: true, upsert: false }
     );
   },

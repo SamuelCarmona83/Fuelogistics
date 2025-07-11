@@ -2,6 +2,10 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { useAuth } from "@/hooks/use-auth"
+import { useQuery } from "@tanstack/react-query"
+import { apiRequest } from "@/lib/queryClient"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -742,6 +746,48 @@ const SidebarMenuSubButton = React.forwardRef<
   )
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
+
+// Example SidebarHeader usage with avatar
+export const SidebarHeaderWithAvatar: React.FC = () => {
+  const { user } = useAuth()
+  const { data: profile } = useQuery({
+    queryKey: ["/api/profile"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/profile")
+      return await response.json()
+    },
+    enabled: !!user,
+  })
+
+  const getInitials = (name?: string) => {
+    if (!name) return user?.username?.[0]?.toUpperCase() || "U"
+    return name
+      .split(" ")
+      .map(word => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  return (
+    <div className="flex items-center gap-3 p-4">
+      <Avatar className="h-10 w-10">
+        <AvatarImage src={profile?.profile?.photo?.url} alt={profile?.profile?.name || user?.username || "Profile"} />
+        <AvatarFallback>
+          {getInitials(profile?.profile?.name)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0 text-left">
+        <p className="text-sm font-medium text-sidebar-foreground truncate">
+          {profile?.profile?.name || user?.username}
+        </p>
+        <p className="text-xs text-sidebar-foreground/70">
+          {user?.role === "admin" ? "Administrador" : "Usuario"}
+        </p>
+      </div>
+    </div>
+  )
+}
 
 export {
   Sidebar,

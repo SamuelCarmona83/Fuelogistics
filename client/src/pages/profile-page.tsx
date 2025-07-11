@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import * as React from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -57,10 +58,29 @@ export default function ProfilePage() {
     },
   });
 
+  // Sync formData with profile changes
+  // This ensures the form always shows the latest profile info
+  // and updates if the profile changes (e.g., after photo upload)
+  useEffect(() => {
+    if (profile?.profile) {
+      setFormData({
+        name: profile.profile.name || "",
+        email: profile.profile.email || "",
+        phone: profile.profile.phone || "",
+      });
+    }
+  }, [profile]);
+
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest("PUT", "/api/profile", data);
+      // Only send text fields, never photo
+      const payload = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+      };
+      const response = await apiRequest("PUT", "/api/profile", payload);
       return await response.json();
     },
     onSuccess: () => {
@@ -130,7 +150,7 @@ export default function ProfilePage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,7 +164,6 @@ export default function ProfilePage() {
         });
         return;
       }
-      
       if (!file.type.startsWith("image/")) {
         toast({
           title: "Error",
@@ -153,12 +172,11 @@ export default function ProfilePage() {
         });
         return;
       }
-      
       uploadPhotoMutation.mutate(file);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     updateProfileMutation.mutate(formData);
   };
@@ -239,7 +257,10 @@ export default function ProfilePage() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => deletePhotoMutation.mutate()}
+                      onClick={() => {
+                        deletePhotoMutation.mutate();
+                        setFormData((prev) => ({ ...prev, photo: null }));
+                      }}
                       disabled={deletePhotoMutation.isPending}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
@@ -290,7 +311,7 @@ export default function ProfilePage() {
                   <div>
                     <Label htmlFor="role">Role</Label>
                     <div className="mt-2">
-                      <Badge variant="secondary">{profile?.role || "User"}</Badge>
+                      <Badge>{profile?.role || "User"}</Badge>
                     </div>
                   </div>
                 </div>
