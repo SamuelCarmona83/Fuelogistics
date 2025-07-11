@@ -8,55 +8,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Plus, Search, Edit, Trash2, Phone, Mail, Calendar, Award } from "lucide-react";
+import { insertDriverSchema, type IDriver } from "@shared/schema";
+import { Plus, Search, Edit, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { z } from "zod";
 
-const driverFormSchema = z.object({
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-  license: z.string().min(5, "Número de licencia requerido"),
-  phone: z.string().min(10, "Teléfono debe tener al menos 10 dígitos"),
-});
+type DriverFormData = z.infer<typeof insertDriverSchema>;
 
-type DriverFormData = z.infer<typeof driverFormSchema>;
-
-// Mock data for demonstration
-const mockDrivers = [
-  {
-    id: "1",
-    name: "Carlos Mendoza",
-    license: "C1-123456",
-    phone: "3001234567",
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-  {
-    id: "2",
-    name: "María González",
-    license: "C1-654321",
-    phone: "3009876543",
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-  {
-    id: "3",
-    name: "José Ramírez",
-    license: "C1-112233",
-    phone: "3001122334",
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-];
+// Extended interface for frontend display
+interface Driver extends Omit<IDriver, '_id'> {
+  id?: string;
+  _id?: string;
+}
 
 export function DriversManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingDriver, setEditingDriver] = useState<any>(null);
+  const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   const form = useForm<DriverFormData>({
-    resolver: zodResolver(driverFormSchema),
+    resolver: zodResolver(insertDriverSchema),
     defaultValues: {
       name: "",
       license: "",
@@ -64,21 +37,25 @@ export function DriversManagement() {
     },
   });
 
-  // Using mock data for now - in real implementation this would fetch from API
-  const { data: drivers = mockDrivers, isLoading } = useQuery({
+  // Fetch drivers from API
+  const { data: driversResponse, isLoading } = useQuery({
     queryKey: ['/api/drivers'],
-    queryFn: () => Promise.resolve(mockDrivers),
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/drivers");
+      return response.json();
+    },
   });
+
+  // Normalize drivers data
+  const drivers: Driver[] = Array.isArray(driversResponse) ? driversResponse.map((driver: any) => ({
+    ...driver,
+    id: driver.id || driver._id,
+  })) : [];
 
   const createDriverMutation = useMutation({
     mutationFn: async (data: DriverFormData) => {
-      const newDriver = {
-        ...data,
-        id: Date.now().toString(),
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-      return newDriver;
+      const response = await apiRequest("POST", "/api/drivers", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/drivers'] });
@@ -89,11 +66,20 @@ export function DriversManagement() {
         description: "El conductor ha sido registrado exitosamente",
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const updateDriverMutation = useMutation({
     mutationFn: async (data: DriverFormData) => {
-      return { ...editingDriver, ...data, updated_at: new Date() };
+      if (!editingDriver) throw new Error("No driver to update");
+      const response = await apiRequest("PUT", `/api/drivers/${editingDriver.id || editingDriver._id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/drivers'] });
@@ -105,11 +91,19 @@ export function DriversManagement() {
         description: "Los datos del conductor han sido actualizados",
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const deleteDriverMutation = useMutation({
     mutationFn: async (id: string) => {
-      return id;
+      const response = await apiRequest("DELETE", `/api/drivers/${id}`);
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/drivers'] });
@@ -118,9 +112,16 @@ export function DriversManagement() {
         description: "El conductor ha sido removido del sistema",
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
-  const handleEdit = (driver: any) => {
+  const handleEdit = (driver: Driver) => {
     setEditingDriver(driver);
     form.reset({
       name: driver.name,
@@ -138,11 +139,25 @@ export function DriversManagement() {
     }
   };
 
-  const filteredDrivers = drivers.filter(driver =>
-    driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    driver.license.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    driver.phone.includes(searchTerm)
-  );
+  // TODO: Implement real-time updates using WebSockets or similar
+  // For now, we will just filter the drivers based on the search term
+  // This will be replaced with a more efficient solution later
+  const filteredDrivers = drivers.filter(driver => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const matchesName = driver.name?.toLowerCase().includes(searchLower);
+    const matchesLicense = driver.license?.toLowerCase().includes(searchLower);
+    const matchesPhone = driver.phone?.includes(searchTerm);
+    
+    return matchesName || matchesLicense || matchesPhone;
+  });
+
+  // Debug log
+  console.log('Search term:', searchTerm);
+  console.log('Total drivers:', drivers.length);
+  console.log('Filtered drivers:', filteredDrivers.length);
+  console.log('Drivers data:', drivers);
 
   return (
     <div className="space-y-6">
@@ -229,6 +244,9 @@ export function DriversManagement() {
                     type="submit" 
                     disabled={createDriverMutation.isPending || updateDriverMutation.isPending}
                   >
+                    {(createDriverMutation.isPending || updateDriverMutation.isPending) && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     {editingDriver ? "Actualizar" : "Crear"} Conductor
                   </Button>
                 </div>
@@ -261,50 +279,80 @@ export function DriversManagement() {
           <CardTitle>Lista de Conductores</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Licencia</TableHead>
-                <TableHead>Teléfono</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredDrivers.map((driver) => (
-                <TableRow key={driver.id}>
-                  <TableCell>
-                    <div className="font-medium">{driver.name}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div>{driver.license}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div>{driver.phone}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(driver)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deleteDriverMutation.mutate(driver.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+              <span className="ml-2 text-slate-600">Cargando conductores...</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Licencia</TableHead>
+                  <TableHead>Teléfono</TableHead>
+                  <TableHead>Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredDrivers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8">
+                      <div className="text-slate-500">
+                        {searchTerm ? "No se encontraron conductores que coincidan con la búsqueda" : "No hay conductores registrados"}
+                      </div>
+                      {!searchTerm && (
+                        <div className="mt-2">
+                          <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)}>
+                            Crear primer conductor
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredDrivers.map((driver) => (
+                    <TableRow key={driver.id || driver._id}>
+                      <TableCell>
+                        <div className="font-medium">{driver.name}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div>{driver.license}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div>{driver.phone}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(driver)}
+                            disabled={updateDriverMutation.isPending}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => deleteDriverMutation.mutate(driver.id || driver._id || "")}
+                            className="text-red-600 hover:text-red-700"
+                            disabled={deleteDriverMutation.isPending}
+                          >
+                            {deleteDriverMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

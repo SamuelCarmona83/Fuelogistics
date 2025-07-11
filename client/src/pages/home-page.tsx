@@ -14,6 +14,7 @@ import { DriversManagement } from "@/components/drivers-management";
 import { ReportsDashboard } from "@/components/reports-dashboard";
 import { SettingsManagement } from "@/components/settings-management";
 import { EnhancedTripsLogistics } from "@/components/enhanced-trips-logistics";
+import { UsersManagement } from "@/components/users-management";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -123,6 +124,15 @@ export default function HomePage() {
             >
               <Settings className="mr-3 h-4 w-4" />
               Configuración
+            </Button>
+            <Button 
+              variant={activeSection === "users" ? "default" : "ghost"}
+              className="w-full justify-start h-12"
+              onClick={() => setActiveSection("users")}
+              style={{ display: user?.role === "admin" ? undefined : "none" }}
+            >
+              <Users className="mr-3 h-4 w-4" />
+              Usuarios
             </Button>
           </nav>
 
@@ -278,6 +288,8 @@ export default function HomePage() {
           {activeSection === "reports" && <ReportsDashboard />}
           
           {activeSection === "settings" && <SettingsManagement />}
+          
+          {activeSection === "users" && user?.role === "admin" && <UsersManagement />}
         </main>
       </div>
 

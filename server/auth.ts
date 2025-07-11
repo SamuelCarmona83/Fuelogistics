@@ -46,8 +46,14 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      const user = await storage.getUserByUsername(username);
+    new LocalStrategy({ usernameField: "username" }, async (username, password, done) => {
+      // Permitir login por email o username
+      let user = null;
+      if (username.includes("@")) {
+        user = await storage.getUserByUsername(username.toLowerCase());
+      } else {
+        user = await storage.getUserByUsername(username);
+      }
       if (!user || !(await comparePasswords(password, user.password))) {
         return done(null, false);
       } else {
@@ -95,3 +101,5 @@ export function setupAuth(app: Express) {
     res.json(req.user);
   });
 }
+
+export { hashPassword };
