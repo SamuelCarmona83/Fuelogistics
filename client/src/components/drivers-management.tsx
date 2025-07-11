@@ -30,23 +30,7 @@ const mockDrivers = [
     phone: "3001234567",
     created_at: new Date(),
     updated_at: new Date(),
-  },
-  {
-    id: "2",
-    name: "María González",
-    license: "C1-654321",
-    phone: "3009876543",
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-  {
-    id: "3",
-    name: "José Ramírez",
-    license: "C1-112233",
-    phone: "3001122334",
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
+  }
 ];
 
 export function DriversManagement() {

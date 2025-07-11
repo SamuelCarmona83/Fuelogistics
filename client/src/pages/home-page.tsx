@@ -22,11 +22,7 @@ export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: "Nuevo viaje completado", message: "Camión ABC123 ha completado su entrega", time: "hace 5 min", read: false },
-    { id: 2, title: "Mantenimiento programado", message: "Camión XYZ789 requiere mantenimiento", time: "hace 1 hora", read: false },
-    { id: 3, title: "Viaje cancelado", message: "Viaje hacia Estación Norte fue cancelado", time: "hace 2 horas", read: true },
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
   // Fetch full profile data
   const { data: profile } = useQuery({
