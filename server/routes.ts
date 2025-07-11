@@ -7,6 +7,7 @@ import { insertTripSchema, updateTripSchema, updateProfileSchema } from "@shared
 import { uploadFile, deleteFile, getFileUrl } from "./minio";
 import { z } from "zod";
 import multer from "multer";
+import express from "express";
 
 // Configure multer for file uploads
 const upload = multer({ 
@@ -262,7 +263,15 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.put("/api/profile", requireAuth, async (req, res) => {
+  app.post("/api/register", express.json(), async (req, res) => {
+    // registration logic here
+  });
+
+  app.post("/api/login", express.json(), async (req, res) => {
+    // login logic here
+  });
+
+  app.put("/api/profile", express.json(), requireAuth, async (req, res) => {
     try {
       const validatedData = updateProfileSchema.parse(req.body);
       const userId = req.user!._id.toString();

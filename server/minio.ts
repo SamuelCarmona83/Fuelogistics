@@ -1,7 +1,8 @@
 import { Client } from 'minio';
 
-const minioEndpoint = process.env.MINIO_ENDPOINT || 'http://localhost:9000';
-const endpointParts = minioEndpoint.replace(/^https?:\/\//, '').split(':');
+const minioInternalEndpoint = process.env.MINIO_INTERNAL_ENDPOINT || process.env.MINIO_ENDPOINT || 'http://minio:9000';
+const minioPublicEndpoint = process.env.MINIO_PUBLIC_ENDPOINT || process.env.MINIO_ENDPOINT || 'http://localhost:9000';
+const endpointParts = minioInternalEndpoint.replace(/^https?:\/\//, '').split(':');
 const endPoint = endpointParts[0];
 const port = parseInt(endpointParts[1] || '9000');
 
@@ -19,31 +20,27 @@ export async function initializeMinio() {
   try {
     // Check if bucket exists
     const bucketExists = await minioClient.bucketExists(BUCKET_NAME);
-    
     if (!bucketExists) {
       // Create bucket
       await minioClient.makeBucket(BUCKET_NAME);
       console.log(`MinIO bucket "${BUCKET_NAME}" created successfully`);
-      
-      // Set bucket policy to public read
-      const policy = {
-        Version: '2012-10-17',
-        Statement: [
-          {
-            Effect: 'Allow',
-            Principal: { AWS: ['*'] },
-            Action: ['s3:GetObject'],
-            Resource: [`arn:aws:s3:::${BUCKET_NAME}/*`],
-          },
-        ],
-      };
-      
-      await minioClient.setBucketPolicy(BUCKET_NAME, JSON.stringify(policy));
-      console.log(`MinIO bucket "${BUCKET_NAME}" policy set to public read`);
     } else {
       console.log(`MinIO bucket "${BUCKET_NAME}" already exists`);
     }
-    
+    // Always set bucket policy to public read
+    const policy = {
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Effect: 'Allow',
+          Principal: { AWS: ['*'] },
+          Action: ['s3:GetObject'],
+          Resource: [`arn:aws:s3:::${BUCKET_NAME}/*`],
+        },
+      ],
+    };
+    await minioClient.setBucketPolicy(BUCKET_NAME, JSON.stringify(policy));
+    console.log(`MinIO bucket "${BUCKET_NAME}" policy set to public read`);
     return true;
   } catch (error) {
     console.error('Error initializing MinIO:', error);
@@ -56,14 +53,11 @@ export async function uploadFile(fileName: string, fileBuffer: Buffer, contentTy
     // Add timestamp to filename to avoid conflicts
     const timestamp = Date.now();
     const uniqueFileName = `${timestamp}-${fileName}`;
-    
     await minioClient.putObject(BUCKET_NAME, uniqueFileName, fileBuffer, {
       'Content-Type': contentType,
     });
-    
     // Return the public URL
-    const publicUrl = `${minioEndpoint}/${BUCKET_NAME}/${uniqueFileName}`;
-    
+    const publicUrl = `${minioPublicEndpoint}/${BUCKET_NAME}/${uniqueFileName}`;
     return {
       fileName: uniqueFileName,
       originalName: fileName,
@@ -89,7 +83,7 @@ export async function deleteFile(fileName: string) {
 export async function getFileUrl(fileName: string) {
   try {
     // For public buckets, we can return the direct URL
-    const publicUrl = `${minioEndpoint}/${BUCKET_NAME}/${fileName}`;
+    const publicUrl = `${minioPublicEndpoint}/${BUCKET_NAME}/${fileName}`;
     return publicUrl;
   } catch (error) {
     console.error('Error getting file URL:', error);
