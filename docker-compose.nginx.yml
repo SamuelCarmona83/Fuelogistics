@@ -1,0 +1,129 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: fuel_truck_db
+    volumes:
+      - mongo_data:/data/db
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "27017:27017"
+    networks:
+      - fuel-truck-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app-prod:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongo:27017/fuel_truck_db
+      SESSION_SECRET: fuel_truck_session_secret_prod_2024
+      PORT: 5001
+      VIRTUAL_HOST: carmonasamuel.lat,www.carmonasamuel.lat
+      LETSENCRYPT_HOST: carmonasamuel.lat,www.carmonasamuel.lat
+      LETSENCRYPT_EMAIL: samuel.carmona.rodrigz@gmail.com
+      DEFAULT_EMAIL: samuel.carmona.rodrigz@gmail.com
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_INTERNAL_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_ENDPOINT: https://minio.carmonasamuel.lat
+      MINIO_ACCESS_KEY: fuelogistics
+      MINIO_SECRET_KEY: fuelogistics123
+      MINIO_BUCKET: fuelogistics-files
+      MINIO_USE_SSL: false
+    expose:
+      - "5001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - fuel-truck-network
+      - nginx-proxy
+
+  minio:
+    image: minio/minio:RELEASE.2024-06-11T03-13-30Z
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: fuelogistics
+      MINIO_ROOT_PASSWORD: fuelogistics123
+      VIRTUAL_HOST: minio.carmonasamuel.lat
+      VIRTUAL_PORT: 9000
+      LETSENCRYPT_HOST: minio.carmonasamuel.lat
+      LETSENCRYPT_EMAIL: samuel.carmona.rodrigz@gmail.com
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - fuel-truck-network
+      - nginx-proxy
+
+  minio-init:
+    image: minio/minio:RELEASE.2024-06-11T03-13-30Z
+    depends_on:
+      minio:
+        condition: service_started
+    environment:
+      MINIO_ROOT_USER: fuelogistics
+      MINIO_ROOT_PASSWORD: fuelogistics123
+    networks:
+      - fuel-truck-network
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add minio http://minio:9000 fuelogistics fuelogistics123;
+      /usr/bin/mc mb --ignore-existing minio/fuelogistics-files;
+      /usr/bin/mc policy set public minio/fuelogistics-files;
+      echo 'MinIO bucket configured successfully';
+      "
+
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/nginx/certs:/etc/nginx/certs:rw
+      - /etc/nginx/vhost.d:/etc/nginx/vhost.d
+      - /usr/share/nginx/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - nginx-proxy
+
+  nginx-proxy-acme:
+    image: nginxproxy/acme-companion
+    restart: unless-stopped
+    depends_on:
+      - nginx-proxy
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/acme.sh:/etc/acme.sh:rw
+    environment:
+      - DEFAULT_EMAIL=samuel.carmona.rodrigz@gmail.com
+    networks:
+      - nginx-proxy
+
+networks:
+  fuel-truck-network:
+    driver: bridge
+  nginx-proxy:
+    external: true
+
+volumes:
+  mongo_data:
+    driver: local
+  minio_data:
+    driver: local
