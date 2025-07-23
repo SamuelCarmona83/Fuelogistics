@@ -111,5 +111,64 @@ Para más información sobre MinIO, consulta [MINIO_INTEGRATION.md](MINIO_INTEGR
 - `npm run dev:server` — Solo backend en modo desarrollo
 - `cd client && npm run dev` — Solo frontend en modo desarrollo
 
+## 🔐 Configuración inicial segura
+
+### Crear usuario administrador
+
+⚠️ **Importante**: Por seguridad, el script de creación de admin ya no acepta contraseñas predeterminadas.
+
+#### Método 1: Script automático (recomendado)
+```bash
+# Establecer contraseña segura
+export ADMIN_PASSWORD="TuContraseñaSegura123!"
+
+# Ejecutar script seguro
+./scripts/create-admin-secure.sh
+
+# Limpiar variable de entorno
+unset ADMIN_PASSWORD
+```
+
+#### Método 2: Directo
+```bash
+# Establecer contraseña segura
+export ADMIN_PASSWORD="TuContraseñaSegura123!"
+
+# Ejecutar script de creación
+node init-db/create-admin.cjs
+
+# Limpiar variable de entorno
+unset ADMIN_PASSWORD
+```
+
+### Requisitos de contraseña segura
+- Mínimo 8 caracteres
+- Al menos una letra mayúscula
+- Al menos una letra minúscula  
+- Al menos un número
+- Al menos un carácter especial
+
+📖 **Ver guía completa**: [SECURITY_ADMIN_SETUP.md](./SECURITY_ADMIN_SETUP.md)
+
+## Instalación y despliegue
+
+1. Clona el repositorio:
+   ```sh
+   git clone https://github.com/SamuelCarmona83/Fuelogistics.git
+   cd Fuelogistics
+   ```
+
+2. **Crea el usuario administrador de forma segura**:
+   ```sh
+   export ADMIN_PASSWORD="TuContraseñaSegura123!"
+   ./scripts/create-admin-secure.sh
+   unset ADMIN_PASSWORD
+   ```
+
+3. Levanta los servicios:
+   ```sh
+   docker-compose up --build -d
+   ```
+
 ## Contacto y soporte
 Para dudas o soporte, abre un issue en el repositorio o contacta al equipo de desarrollo.

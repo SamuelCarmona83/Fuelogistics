@@ -4,5 +4,20 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+# Environment files with sensitive data
+.env.admin
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Security and secrets
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# SonarQube analysis results
 sonar-issues.json
 sonar-report.txt
