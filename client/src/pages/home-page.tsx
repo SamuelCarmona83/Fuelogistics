@@ -39,12 +39,14 @@ function getSectionDescription(section: string) {
   }
 }
 
-function NotificationsPopover({ notifications, unreadNotifications, markAllAsRead, markNotificationAsRead }: {
-  notifications: any[];
-  unreadNotifications: number;
-  markAllAsRead: () => void;
-  markNotificationAsRead: (id: number) => void;
-}) {
+interface NotificationsPopoverProps {
+  readonly notifications: any[];
+  readonly unreadNotifications: number;
+  readonly markAllAsRead: () => void;
+  readonly markNotificationAsRead: (id: number) => void;
+}
+
+function NotificationsPopover({ notifications, unreadNotifications, markAllAsRead, markNotificationAsRead }: NotificationsPopoverProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -75,10 +77,11 @@ function NotificationsPopover({ notifications, unreadNotifications, markAllAsRea
             </div>
           ) : (
             notifications.map((notification) => (
-              <div
+              <button
                 key={notification.id}
-                className={`p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
+                className={`w-full text-left p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
                 onClick={() => markNotificationAsRead(notification.id)}
+                aria-label={`Mark notification as read: ${notification.title}`}
               >
                 <div className="flex items-start space-x-3">
                   <div className={`h-2 w-2 rounded-full mt-2 ${!notification.read ? 'bg-blue-500' : 'bg-slate-300'}`} />
@@ -88,7 +91,7 @@ function NotificationsPopover({ notifications, unreadNotifications, markAllAsRea
                     <p className="text-xs text-slate-400 mt-2">{notification.time}</p>
                   </div>
                 </div>
-              </div>
+              </button>
             ))
           )}
         </div>
@@ -97,7 +100,12 @@ function NotificationsPopover({ notifications, unreadNotifications, markAllAsRea
   );
 }
 
-function MainContent({ activeSection, user }: { activeSection: string; user: any }) {
+interface MainContentProps {
+  readonly activeSection: string;
+  readonly user: any;
+}
+
+function MainContent({ activeSection, user }: MainContentProps) {
   switch (activeSection) {
     case "dashboard":
       return <><StatsCards /><TripsTable /></>;

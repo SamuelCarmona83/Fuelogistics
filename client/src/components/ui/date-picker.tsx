@@ -16,6 +16,24 @@ export function DatePickerWithRange({
     to: addDays(new Date(2022, 0, 20), 20),
   })
 
+  // Extract date formatting logic to reduce nested ternary complexity
+  const formatDateRange = (dateRange: DateRange | undefined) => {
+    if (!dateRange?.from) {
+      return <span>Pick a date</span>
+    }
+
+    if (dateRange.to) {
+      return (
+        <>
+          {format(dateRange.from, "LLL dd, y")} -{" "}
+          {format(dateRange.to, "LLL dd, y")}
+        </>
+      )
+    }
+
+    return format(dateRange.from, "LLL dd, y")
+  }
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -29,18 +47,7 @@ export function DatePickerWithRange({
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
-                </>
-              ) : (
-                format(date.from, "LLL dd, y")
-              )
-            ) : (
-              <span>Pick a date</span>
-            )}
+            {formatDateRange(date)}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">

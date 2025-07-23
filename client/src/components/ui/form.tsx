@@ -1,7 +1,15 @@
 "use client"
 
 import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
+import * as LabelPrimitive from "@](({ className, ...props }, ref) => {
+  const id = React.useId()
+  const contextValue = React.useMemo(() => ({ id }), [id])
+
+  return (
+    <FormItemContext.Provider value={contextValue}>
+      <div ref={ref} className={cn("space-y-2", className)} {...props} />
+    </FormItemContext.Provider>
+  )/react-label"
 import { Slot } from "@radix-ui/react-slot"
 import {
   Controller,
@@ -34,8 +42,10 @@ const FormField = <
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
+  const contextValue = React.useMemo(() => ({ name: props.name }), [props.name])
+  
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
+    <FormFieldContext.Provider value={contextValue}>
       <Controller {...props} />
     </FormFieldContext.Provider>
   )
@@ -77,9 +87,10 @@ const FormItem = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
   const id = React.useId()
+  const contextValue = React.useMemo(() => ({ id }), [id])
 
   return (
-    <FormItemContext.Provider value={{ id }}>
+    <FormItemContext.Provider value={contextValue}>
       <div ref={ref} className={cn("space-y-2", className)} {...props} />
     </FormItemContext.Provider>
   )

@@ -67,6 +67,65 @@ export function UsersManagement() {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  // Extract table body rendering to fix nested ternary complexity
+  const renderUsernameCell = (user: any) => {
+    if (editing === user._id) {
+      return <Input value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} />;
+    }
+    return user.username;
+  };
+
+  const renderRoleCell = (user: any) => {
+    if (editing === user._id) {
+      return (
+        <Select value={form.role} onValueChange={role => setForm(f => ({ ...f, role }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="user">Usuario</SelectItem>
+          </SelectContent>
+        </Select>
+      );
+    }
+    return user.role;
+  };
+
+  const renderActionsCell = (user: any) => {
+    if (editing === user._id) {
+      return (
+        <>
+          <Input placeholder="Nueva contraseña (opcional)" type="password" value={form.password ?? ""} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+          <Button size="sm" onClick={() => updateUser.mutate({ id: user._id, ...form })}>Guardar</Button>
+          <Button size="sm" variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
+        </>
+      );
+    }
+    return (
+      <>
+        <Button size="sm" variant="outline" onClick={() => { setEditing(user._id); setForm({ username: user.username, role: user.role, password: "" }); }}>Editar</Button>
+        <Button size="sm" variant="destructive" onClick={() => deleteUser.mutate(user._id)}>Eliminar</Button>
+      </>
+    );
+  };
+
+const renderTableBody = () => {
+    if (isLoading) {
+      return <TableRow><TableCell colSpan={3}>Cargando...</TableCell></TableRow>;
+    }
+    
+    if (!users?.length) {
+      return <TableRow><TableCell colSpan={3}>Sin usuarios</TableCell></TableRow>;
+    }
+    
+    return users.map((u: any) => (
+      <TableRow key={u._id}>
+        <TableCell>{renderUsernameCell(u)}</TableCell>
+        <TableCell>{renderRoleCell(u)}</TableCell>
+        <TableCell className="flex gap-2">{renderActionsCell(u)}</TableCell>
+      </TableRow>
+    ));
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -78,13 +137,13 @@ export function UsersManagement() {
           <Input placeholder="Usuario" value={newUser.username} onChange={e => setNewUser(u => ({ ...u, username: e.target.value }))} />
           <Input placeholder="Contraseña" type="password" value={newUser.password} onChange={e => setNewUser(u => ({ ...u, password: e.target.value }))} />
           <Select value={newUser.role} onValueChange={role => setNewUser(u => ({ ...u, role }))}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Rol" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="admin">Admin</SelectItem>
               <SelectItem value="user">Usuario</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => createUser.mutate(newUser)} disabled={createUser.isPending}>Crear</Button>
+          <Button onClick={() => createUser.mutate(newUser)}>Crear</Button>
         </div>
         {/* Tabla de usuarios */}
         <Table>
@@ -96,44 +155,7 @@ export function UsersManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={3}>Cargando...</TableCell></TableRow>
-            ) : users?.length ? users.map((u: any) => (
-              <TableRow key={u._id}>
-                <TableCell>
-                  {editing === u._id ? (
-                    <Input value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} />
-                  ) : u.username}
-                </TableCell>
-                <TableCell>
-                  {editing === u._id ? (
-                    <Select value={form.role} onValueChange={role => setForm(f => ({ ...f, role }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="user">Usuario</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : u.role}
-                </TableCell>
-                <TableCell className="flex gap-2">
-                  {editing === u._id ? (
-                    <>
-                      <Input placeholder="Nueva contraseña (opcional)" type="password" value={form.password ?? ""} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
-                      <Button size="sm" onClick={() => updateUser.mutate({ id: u._id, ...form })}>Guardar</Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button size="sm" variant="outline" onClick={() => { setEditing(u._id); setForm({ username: u.username, role: u.role, password: "" }); }}>Editar</Button>
-                      <Button size="sm" variant="destructive" onClick={() => deleteUser.mutate(u._id)}>Eliminar</Button>
-                    </>
-                  )}
-                </TableCell>
-              </TableRow>
-            )) : (
-              <TableRow><TableCell colSpan={3}>Sin usuarios</TableCell></TableRow>
-            )}
+            {renderTableBody()}
           </TableBody>
         </Table>
       </CardContent>

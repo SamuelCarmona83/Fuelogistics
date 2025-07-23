@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useState, useRef, useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +31,6 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   

@@ -284,14 +284,14 @@ export function registerRoutes(app: Express): Server {
 
   // Preferencias de usuario (por usuario autenticado)
   app.get("/api/user-preferences", requireAuth, async (req, res) => {
-    const userId = req.user && req.user._id ? String(req.user._id) : undefined;
+    const userId = req.user?._id ? String(req.user._id) : undefined;
     if (!userId) return res.status(400).json({ message: "No user id" });
     const prefs = await storage.getUserPreferences(userId);
     res.json(prefs);
   });
   app.put("/api/user-preferences", requireAuth, async (req, res) => {
     try {
-      const userId = req.user && req.user._id ? String(req.user._id) : undefined;
+      const userId = req.user?._id ? String(req.user._id) : undefined;
       if (!userId) return res.status(400).json({ message: "No user id" });
       const data = userPreferencesSchema.omit({ userId: true }).parse(req.body);
       const prefs = await storage.saveUserPreferences(userId, data);
@@ -384,6 +384,7 @@ export function registerRoutes(app: Express): Server {
         diskUsage,
       });
     } catch (error) {
+      console.error("Error obteniendo estadísticas del sistema:", error);
       res.status(500).json({ message: "Error obteniendo estadísticas del sistema" });
     }
   });
@@ -394,6 +395,7 @@ export function registerRoutes(app: Express): Server {
       const users = await storage.getUsers();
       res.json(users);
     } catch (error) {
+      console.error("Error al obtener usuarios:", error);
       res.status(500).json({ message: "Error al obtener usuarios" });
     }
   });
@@ -407,6 +409,7 @@ export function registerRoutes(app: Express): Server {
       const user = await storage.createUser({ username, password: hashed, role });
       res.status(201).json({ _id: user._id, username: user.username, role: user.role });
     } catch (error) {
+      console.error("Error al crear usuario:", error);
       res.status(500).json({ message: "Error al crear usuario" });
     }
   });
@@ -426,6 +429,7 @@ export function registerRoutes(app: Express): Server {
       if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
       res.json({ _id: user._id, username: user.username, role: user.role });
     } catch (error) {
+      console.error("Error al actualizar usuario:", error);
       res.status(500).json({ message: "Error al actualizar usuario" });
     }
   });
@@ -437,6 +441,7 @@ export function registerRoutes(app: Express): Server {
       if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
       res.status(204).send();
     } catch (error) {
+      console.error("Error al eliminar usuario:", error);
       res.status(500).json({ message: "Error al eliminar usuario" });
     }
   });
@@ -594,7 +599,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const userId = req.user!._id.toString();
       const user = await storage.getUserById(userId);
-      if (!user || !user.profile?.photo) {
+      if (!user?.profile?.photo) {
         return res.status(404).json({ message: "Profile photo not found" });
       }
       try {
