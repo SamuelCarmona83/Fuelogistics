@@ -1,0 +1,15 @@
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+# Install Node.js and npm
+RUN apt-get update && \
+    apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g @sonar/scan && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY . /app
+
+CMD ["sonar", "-Dsonar.host.url=http://host.docker.internal:9000", "-Dsonar.token=sqp_e9b6b4171282a781dbb15dde8ace306aa6e57132", "-Dsonar.projectKey=Prueba"]

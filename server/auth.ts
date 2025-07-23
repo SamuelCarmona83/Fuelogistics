@@ -35,8 +35,9 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
-      secure: false, // true if using HTTPS
-      sameSite: 'lax', // or 'none' if using HTTPS and cross-origin
+      secure: process.env.NODE_ENV === 'production', // true if using HTTPS
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-origin in prod
+      httpOnly: true, // Prevent client-side JS access
     },
   };
 
@@ -46,7 +47,7 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy({ usernameField: "username" }, async (username, password, done) => {
+    new LocalStrategy({ usernameField: "username" }, async (username: string, password: string, done: Function) => {
       // Permitir login por email o username
       let user = null;
       if (username.includes("@")) {
@@ -62,13 +63,13 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user: any, done) => done(null, user._id.toString()));
-  passport.deserializeUser(async (id: string, done) => {
+  passport.serializeUser((user: any, done: Function) => done(null, user._id.toString()));
+  passport.deserializeUser(async (id: string, done: Function) => {
     const user = await storage.getUserById(id);
     done(null, user);
   });
 
-  app.post("/api/register", async (req, res, next) => {
+  app.post("/api/register", async (req: any, res: any, next: Function) => {
     const existingUser = await storage.getUserByUsername(req.body.username);
     if (existingUser) {
       return res.status(400).send("Username already exists");
@@ -79,24 +80,24 @@ export function setupAuth(app: Express) {
       password: await hashPassword(req.body.password),
     });
 
-    req.login(user, (err) => {
+    req.login(user, (err: any) => {
       if (err) return next(err);
       res.status(201).json(user);
     });
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
+  app.post("/api/login", passport.authenticate("local"), (req: any, res: any) => {
     res.status(200).json(req.user);
   });
 
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
+  app.post("/api/logout", (req: any, res: any, next: Function) => {
+    req.logout((err: any) => {
       if (err) return next(err);
       res.sendStatus(200);
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  app.get("/api/user", (req: any, res: any) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });

@@ -27,20 +27,10 @@ export async function initializeMinio() {
     } else {
       console.log(`MinIO bucket "${BUCKET_NAME}" already exists`);
     }
-    // Always set bucket policy to public read
-    const policy = {
-      Version: '2012-10-17',
-      Statement: [
-        {
-          Effect: 'Allow',
-          Principal: { AWS: ['*'] },
-          Action: ['s3:GetObject'],
-          Resource: [`arn:aws:s3:::${BUCKET_NAME}/*`],
-        },
-      ],
-    };
-    await minioClient.setBucketPolicy(BUCKET_NAME, JSON.stringify(policy));
-    console.log(`MinIO bucket "${BUCKET_NAME}" policy set to public read`);
+    // Remove public read policy and use private bucket
+    // Do NOT set public read policy
+    // If policy was previously set, consider removing it:
+    // await minioClient.setBucketPolicy(BUCKET_NAME, JSON.stringify({ Version: '2012-10-17', Statement: [] }));
     return true;
   } catch (error) {
     console.error('Error initializing MinIO:', error);
@@ -80,13 +70,15 @@ export async function deleteFile(fileName: string) {
   }
 }
 
+// Generate a signed URL for file access (valid for 10 minutes)
 export async function getFileUrl(fileName: string) {
   try {
-    // For public buckets, we can return the direct URL
-    const publicUrl = `${minioPublicEndpoint}/${BUCKET_NAME}/${fileName}`;
-    return publicUrl;
+    // Use presignedGetObject for private bucket
+    const expires = 600; // 10 minutes
+    const url = await minioClient.presignedGetObject(BUCKET_NAME, fileName, expires);
+    return url;
   } catch (error) {
-    console.error('Error getting file URL:', error);
+    console.error('Error getting signed file URL:', error);
     throw error;
   }
 }

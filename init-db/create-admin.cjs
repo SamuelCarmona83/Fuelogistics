@@ -21,7 +21,7 @@ async function hashPassword(password) {
 async function main() {
   await mongoose.connect("mongodb://localhost:27017/fuel_truck_db");
   const username = "admin";
-  const password = "admin123"; // Cambia esto si lo deseas
+  const password = process.env.ADMIN_PASSWORD || "admin123"; // Set via env for security
   const role = "admin";
 
   const exists = await User.findOne({ username });
