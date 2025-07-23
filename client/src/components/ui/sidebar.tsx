@@ -772,14 +772,14 @@ export const SidebarHeaderWithAvatar: React.FC = () => {
   return (
     <div className="flex items-center gap-3 p-4">
       <Avatar className="h-10 w-10">
-        <AvatarImage src={profile?.profile?.photo?.url} alt={profile?.profile?.name || user?.username || "Profile"} />
+        <AvatarImage src={profile?.profile?.photo?.url} alt={profile?.profile?.name ?? user?.username ?? "Profile"} />
         <AvatarFallback>
           {getInitials(profile?.profile?.name)}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0 text-left">
         <p className="text-sm font-medium text-sidebar-foreground truncate">
-          {profile?.profile?.name || user?.username}
+          {profile?.profile?.name ?? user?.username}
         </p>
         <p className="text-xs text-sidebar-foreground/70">
           {user?.role === "admin" ? "Administrador" : "Usuario"}

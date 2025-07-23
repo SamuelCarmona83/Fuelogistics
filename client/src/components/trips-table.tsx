@@ -95,7 +95,7 @@ export function TripsTable() {
 
   // Normalize trip IDs so all trips have an 'id' property
   const trips = Array.isArray(data?.trips)
-    ? data.trips.map((trip: any) => ({ ...trip, id: trip.id || trip._id }))
+    ? data.trips.map((trip: any) => ({ ...trip, id: trip.id ?? trip._id }))
     : [];
 
   // Helper to merge filter-bar filters with sort fields
@@ -104,6 +104,113 @@ export function TripsTable() {
       ...prev,
       ...filtersPartial,
     }));
+  };
+
+  // Extract table body rendering to fix nested ternary complexity
+  const renderTableBody = () => {
+    if (isLoading) {
+      return [...Array(5)].map((_, i) => (
+        <TableRow key={`loading-row-${i}`}>
+          <TableCell><Skeleton className="h-8 w-32" /></TableCell>
+          <TableCell><Skeleton className="h-8 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-8 w-40" /></TableCell>
+          <TableCell><Skeleton className="h-8 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-8 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-8 w-32" /></TableCell>
+          <TableCell><Skeleton className="h-8 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-8 w-16" /></TableCell>
+        </TableRow>
+      ));
+    }
+
+    if (trips.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={8} className="text-center py-8">
+            <p className="text-slate-500">No se encontraron viajes</p>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return trips.map((trip) => (
+      <TableRow key={trip.id} className="hover:bg-slate-50 transition-colors">
+        <TableCell>
+          <div className="flex items-center">
+            <div className="h-8 w-8 bg-slate-200 rounded-full flex items-center justify-center mr-3">
+              <User className="text-slate-600 h-4 w-4" />
+            </div>
+            <span className="font-medium">{trip.conductor}</span>
+          </div>
+        </TableCell>
+        <TableCell>
+          <span className="font-mono text-sm">{trip.camion}</span>
+        </TableCell>
+        <TableCell>
+          <div className="space-y-1">
+            <div className="text-sm">{trip.origen}</div>
+            <div className="text-sm text-slate-500 flex items-center">
+              <ArrowRight className="mx-1 h-3 w-3" />
+              {trip.destino}
+            </div>
+          </div>
+        </TableCell>
+        <TableCell>{trip?.combustible}</TableCell>
+        <TableCell>{trip?.cantidad_litros?.toLocaleString()} L</TableCell>
+        <TableCell>
+          {new Date(trip.fecha_salida).toLocaleString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </TableCell>
+        <TableCell>
+          {getStatusBadge(trip.estado)}
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditingTrip(trip)}
+              className="text-slate-400 hover:text-slate-600"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-slate-400 hover:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancelar viaje</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    ¿Estás seguro que deseas cancelar este viaje? Esta acción no se puede deshacer.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteMutation.mutate(trip.id)}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Confirmar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </TableCell>
+      </TableRow>
+    ));
   };
 
   if (error) {
@@ -181,106 +288,7 @@ export function TripsTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
-                  // Loading skeletons
-                  [...Array(5)].map((_, i) => (
-                    <TableRow key={`loading-row-${i}`}>
-                      <TableCell><Skeleton className="h-8 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-40" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-16" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : trips.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      <p className="text-slate-500">No se encontraron viajes</p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  trips.map((trip) => (
-                    <TableRow key={trip.id} className="hover:bg-slate-50 transition-colors">
-                      <TableCell>
-                        <div className="flex items-center">
-                          <div className="h-8 w-8 bg-slate-200 rounded-full flex items-center justify-center mr-3">
-                            <User className="text-slate-600 h-4 w-4" />
-                          </div>
-                          <span className="font-medium">{trip.conductor}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">{trip.camion}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="text-sm">{trip.origen}</div>
-                          <div className="text-sm text-slate-500 flex items-center">
-                            <ArrowRight className="mx-1 h-3 w-3" />
-                            {trip.destino}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{trip?.combustible}</TableCell>
-                      <TableCell>{trip?.cantidad_litros?.toLocaleString()} L</TableCell>
-                      <TableCell>
-                        {new Date(trip.fecha_salida).toLocaleString('es-ES', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(trip.estado)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setEditingTrip(trip)}
-                            className="text-slate-400 hover:text-slate-600"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-slate-400 hover:text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Cancelar viaje</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  ¿Estás seguro que deseas cancelar este viaje? Esta acción no se puede deshacer.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => deleteMutation.mutate(trip.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Confirmar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                {renderTableBody()}
               </TableBody>
             </Table>
           </div>

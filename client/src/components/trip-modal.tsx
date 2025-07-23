@@ -299,7 +299,7 @@ export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
                         max="30000"
                         placeholder="Máximo 30,000 litros"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) ?? 0)}
                       />
                     </FormControl>
                     <p className="text-xs text-slate-500">Máximo permitido: 30,000 litros</p>

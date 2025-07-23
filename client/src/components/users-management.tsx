@@ -119,7 +119,7 @@ export function UsersManagement() {
                 <TableCell className="flex gap-2">
                   {editing === u._id ? (
                     <>
-                      <Input placeholder="Nueva contraseña (opcional)" type="password" value={form.password || ""} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+                      <Input placeholder="Nueva contraseña (opcional)" type="password" value={form.password ?? ""} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
                       <Button size="sm" onClick={() => updateUser.mutate({ id: u._id, ...form })}>Guardar</Button>
                       <Button size="sm" variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
                     </>
