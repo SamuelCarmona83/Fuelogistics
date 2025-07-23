@@ -143,6 +143,8 @@ export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
     form.reset();
   };
 
+  const isLoading = Boolean((createMutation.isPending ?? false) || (updateMutation.isPending ?? false));
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -299,7 +301,7 @@ export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
                         max="30000"
                         placeholder="Máximo 30,000 litros"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) ?? 0)}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                       />
                     </FormControl>
                     <p className="text-xs text-slate-500">Máximo permitido: 30,000 litros</p>
@@ -376,9 +378,9 @@ export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
               </Button>
               <Button 
                 type="submit"
-                disabled={createMutation.isPending || updateMutation.isPending}
+                disabled={isLoading}
               >
-                {(createMutation.isPending || updateMutation.isPending) && (
+                {isLoading && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 {isEditing ? "Actualizar Viaje" : "Crear Viaje"}

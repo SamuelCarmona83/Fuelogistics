@@ -108,9 +108,11 @@ export function TripsTable() {
 
   // Extract table body rendering to fix nested ternary complexity
   const renderTableBody = () => {
+    const skeletonRows = ['row1', 'row2', 'row3', 'row4', 'row5'];
+    
     if (isLoading) {
-      return [...Array(5)].map((_, i) => (
-        <TableRow key={`loading-row-${i}`}>
+      return skeletonRows.map((rowId) => (
+        <TableRow key={`loading-${rowId}`}>
           <TableCell><Skeleton className="h-8 w-32" /></TableCell>
           <TableCell><Skeleton className="h-8 w-20" /></TableCell>
           <TableCell><Skeleton className="h-8 w-40" /></TableCell>

@@ -14,11 +14,13 @@ export function StatsCards() {
     queryKey: ["/api/viajes"],
   });
 
+  const skeletonCards = ['trips', 'completed', 'liters', 'trucks'];
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[...Array(4)].map((_, i) => (
-          <Card key={`loading-skeleton-${i}`}>
+        {skeletonCards.map((cardType) => (
+          <Card key={`skeleton-${cardType}`}>
             <CardContent className="pt-6">
               <div className="flex items-center">
                 <Skeleton className="h-12 w-12 rounded-lg" />

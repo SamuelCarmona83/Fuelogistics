@@ -71,11 +71,12 @@ export function EnhancedTripsLogistics() {
 
   // Filter trips based on active tab and filters
   const filteredTrips = trips.filter((trip: any) => {
-    const matchesSearch = !searchTerm || 
-      (trip.conductor?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
-      (trip.camion?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
-      (trip.origen?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
-      (trip.destino?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
+    const matchesSearch = !searchTerm || [
+      trip.conductor?.toLowerCase()?.includes(searchTerm.toLowerCase()),
+      trip.camion?.toLowerCase()?.includes(searchTerm.toLowerCase()),
+      trip.origen?.toLowerCase()?.includes(searchTerm.toLowerCase()),
+      trip.destino?.toLowerCase()?.includes(searchTerm.toLowerCase())
+    ].some(match => match === true);
 
     const matchesStatus = statusFilter === "all" || trip.estado === statusFilter;
 
