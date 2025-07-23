@@ -17,6 +17,105 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
+function getSectionTitle(section: string) {
+  switch (section) {
+    case "dashboard": return "Dashboard";
+    case "trips": return "Gestión de Viajes";
+    case "drivers": return "Conductores";
+    case "reports": return "Reportes";
+    case "settings": return "Configuración";
+    default: return "";
+  }
+}
+
+function getSectionDescription(section: string) {
+  switch (section) {
+    case "dashboard": return "Vista general del sistema";
+    case "trips": return "Administra los viajes de camiones de combustible";
+    case "drivers": return "Gestiona la información de conductores";
+    case "reports": return "Reportes y análisis de datos";
+    case "settings": return "Configuración del sistema";
+    default: return "";
+  }
+}
+
+function NotificationsPopover({ notifications, unreadNotifications, markAllAsRead, markNotificationAsRead }: {
+  notifications: any[];
+  unreadNotifications: number;
+  markAllAsRead: () => void;
+  markNotificationAsRead: (id: number) => void;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm" className="relative">
+          <Bell className="h-5 w-5" />
+          {unreadNotifications > 0 && (
+            <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+              {unreadNotifications}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="end">
+        <div className="p-4 border-b border-slate-200">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900">Notificaciones</h3>
+            {unreadNotifications > 0 && (
+              <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs">
+                Marcar todas como leídas
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="max-h-96 overflow-y-auto">
+          {notifications.length === 0 ? (
+            <div className="p-4 text-center text-slate-500">
+              No hay notificaciones
+            </div>
+          ) : (
+            notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
+                onClick={() => markNotificationAsRead(notification.id)}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className={`h-2 w-2 rounded-full mt-2 ${!notification.read ? 'bg-blue-500' : 'bg-slate-300'}`} />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-900">{notification.title}</p>
+                    <p className="text-sm text-slate-600 mt-1">{notification.message}</p>
+                    <p className="text-xs text-slate-400 mt-2">{notification.time}</p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function MainContent({ activeSection, user }: { activeSection: string; user: any }) {
+  switch (activeSection) {
+    case "dashboard":
+      return <><StatsCards /><TripsTable /></>;
+    case "trips":
+      return <EnhancedTripsLogistics />;
+    case "drivers":
+      return <DriversManagement />;
+    case "reports":
+      return <ReportsDashboard />;
+    case "settings":
+      return <SettingsManagement />;
+    case "users":
+      return user?.role === "admin" ? <UsersManagement /> : null;
+    default:
+      return null;
+  }
+}
+
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -192,72 +291,19 @@ export default function HomePage() {
         <header className="bg-white shadow-sm border-b border-slate-200 h-16 flex items-center justify-between px-6">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">
-              {activeSection === "dashboard" ? "Dashboard" : 
-               activeSection === "trips" ? "Gestión de Viajes" :
-               activeSection === "drivers" ? "Conductores" :
-               activeSection === "reports" ? "Reportes" : "Configuración"}
+              {getSectionTitle(activeSection)}
             </h1>
             <p className="text-sm text-slate-500">
-              {activeSection === "dashboard" ? "Vista general del sistema" :
-               activeSection === "trips" ? "Administra los viajes de camiones de combustible" :
-               activeSection === "drivers" ? "Gestiona la información de conductores" :
-               activeSection === "reports" ? "Reportes y análisis de datos" : "Configuración del sistema"}
+              {getSectionDescription(activeSection)}
             </p>
           </div>
           <div className="flex items-center space-x-3">
-            {/* Notifications */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-5 w-5" />
-                  {unreadNotifications > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                      {unreadNotifications}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end">
-                <div className="p-4 border-b border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-slate-900">Notificaciones</h3>
-                    {unreadNotifications > 0 && (
-                      <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs">
-                        Marcar todas como leídas
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-4 text-center text-slate-500">
-                      No hay notificaciones
-                    </div>
-                  ) : (
-                    notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${
-                          !notification.read ? 'bg-blue-50' : ''
-                        }`}
-                        onClick={() => markNotificationAsRead(notification.id)}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div className={`h-2 w-2 rounded-full mt-2 ${
-                            !notification.read ? 'bg-blue-500' : 'bg-slate-300'
-                          }`} />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-900">{notification.title}</p>
-                            <p className="text-sm text-slate-600 mt-1">{notification.message}</p>
-                            <p className="text-xs text-slate-400 mt-2">{notification.time}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
+            <NotificationsPopover 
+              notifications={notifications} 
+              unreadNotifications={unreadNotifications} 
+              markAllAsRead={markAllAsRead} 
+              markNotificationAsRead={markNotificationAsRead}
+            />
             {/* Add New Trip Button - Only show on dashboard and trips */}
             {(activeSection === "dashboard" || activeSection === "trips") && (
               <Button onClick={() => setIsModalOpen(true)}>
@@ -270,24 +316,7 @@ export default function HomePage() {
 
         {/* Dashboard Content */}
         <main className="flex-1 overflow-y-auto p-6">
-          {activeSection === "dashboard" && (
-            <>
-              {/* Stats Cards */}
-              <StatsCards />
-              {/* Trips Table */}
-              <TripsTable />
-            </>
-          )}
-          
-          {activeSection === "trips" && <EnhancedTripsLogistics />}
-          
-          {activeSection === "drivers" && <DriversManagement />}
-          
-          {activeSection === "reports" && <ReportsDashboard />}
-          
-          {activeSection === "settings" && <SettingsManagement />}
-          
-          {activeSection === "users" && user?.role === "admin" && <UsersManagement />}
+          <MainContent activeSection={activeSection} user={user} />
         </main>
       </div>
 
