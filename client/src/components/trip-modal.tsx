@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { insertTripSchema, updateTripSchema, Trip, type IDriver } from "@shared/schema";
+import { insertTripSchema, Trip, type IDriver } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, X, Plus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { FileUpload } from "@/components/file-upload";
-import { useState } from "react";
 
 interface TripModalProps {
   isOpen: boolean;
@@ -28,9 +27,8 @@ const formSchema = insertTripSchema.extend({
 type FormData = z.infer<typeof formSchema>;
 
 export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
-  const { toast } = useToast();
+    const { toast } = useToast();
   const isEditing = !!trip;
-  const [showDriverForm, setShowDriverForm] = useState(false);
 
   // Fetch drivers for the selector
   const { data: driversResponse } = useQuery({
@@ -49,16 +47,16 @@ export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      camion: trip?.camion || "",
-      conductor: trip?.conductor || "",
-      origen: trip?.origen || "",
-      destino: trip?.destino || "",
-      combustible: trip?.combustible || "",
-      cantidad_litros: trip?.cantidad_litros || 0,
+      camion: trip?.camion ?? "",
+            conductor: trip?.conductor ?? "",
+      origen: trip?.origen ?? "",
+      destino: trip?.destino ?? "",
+      combustible: trip?.combustible ?? "",
+      cantidad_litros: trip?.cantidad_litros ?? 0,
       fecha_salida: trip?.fecha_salida 
         ? new Date(trip.fecha_salida).toISOString().slice(0, 16)
         : "",
-      estado: trip?.estado || "En tránsito",
+      estado: trip?.estado ?? "En tránsito",
     },
   });
 
@@ -101,7 +99,7 @@ export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
         fecha_salida: new Date(data.fecha_salida).toISOString(),
       };
       
-      const response = await apiRequest("PUT", `/api/viajes/${trip.id || trip._id}`, payload);
+            const response = await apiRequest("PUT", `/api/viajes/${trip.id ?? trip._id}`, payload);
       return response.json();
     },
     onSuccess: () => {
@@ -202,7 +200,7 @@ export function TripModal({ isOpen, onClose, trip }: TripModalProps) {
                         ) : (
                           drivers.map((driver) => (
                             <SelectItem 
-                              key={driver.id || driver._id} 
+                              key={driver.id ?? driver._id} 
                               value={driver.name}
                             >
                               {driver.name} - {driver.license}

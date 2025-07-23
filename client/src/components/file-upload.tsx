@@ -1,5 +1,4 @@
-import { useState, useRef } from 'react';
-import React from "react";
+import React, { useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -160,7 +159,7 @@ export function FileUpload({
 
   const getFileIcon = (fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '')) {
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension ?? '')) {
       return <Image className="w-4 h-4" />;
     }
     return <FileText className="w-4 h-4" />;

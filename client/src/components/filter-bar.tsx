@@ -77,7 +77,7 @@ export function FilterBar({ onFiltersChange }: FilterBarProps) {
 
           {/* Filters */}
           <div className="flex flex-wrap gap-3">
-            <Select value={status || "all"} onValueChange={handleStatusChange}>
+            <Select value={status ?? "all"} onValueChange={handleStatusChange}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Todos los Estados" />
               </SelectTrigger>
@@ -89,7 +89,7 @@ export function FilterBar({ onFiltersChange }: FilterBarProps) {
               </SelectContent>
             </Select>
 
-            <Select value={fuelType || "all"} onValueChange={handleFuelTypeChange}>
+            <Select value={fuelType ?? "all"} onValueChange={handleFuelTypeChange}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Tipo de Combustible" />
               </SelectTrigger>

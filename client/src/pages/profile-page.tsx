@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, Trash2, User, Mail, Phone, ArrowLeft } from "lucide-react";
+import { Camera, Save, Trash2, User, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
@@ -51,9 +51,9 @@ export default function ProfilePage() {
     },
     onSuccess: (data) => {
       setFormData({
-        name: data.profile?.name || "",
-        email: data.profile?.email || "",
-        phone: data.profile?.phone || "",
+        name: data.profile?.name ?? "",
+        email: data.profile?.email ?? "",
+        phone: data.profile?.phone ?? "",
       });
     },
   });
@@ -64,9 +64,9 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile?.profile) {
       setFormData({
-        name: profile.profile.name || "",
-        email: profile.profile.email || "",
-        phone: profile.profile.phone || "",
+        name: profile.profile.name ?? "",
+        email: profile.profile.email ?? "",
+        phone: profile.profile.phone ?? "",
       });
     }
   }, [profile]);
@@ -232,12 +232,12 @@ export default function ProfilePage() {
                 <Avatar className="w-24 h-24">
                   <AvatarImage 
                     src={profile?.profile?.photo?.url} 
-                    alt={profile?.profile?.name || profile?.username || "Profile"} 
+                    alt={profile?.profile?.name ?? profile?.username ?? "Profile"} 
                   />
                   <AvatarFallback className="text-lg">
                     {profile?.profile?.name 
                       ? getInitials(profile.profile.name)
-                      : profile?.username?.[0]?.toUpperCase() || "U"
+                      : profile?.username?.[0]?.toUpperCase() ?? "U"
                     }
                   </AvatarFallback>
                 </Avatar>
@@ -299,7 +299,7 @@ export default function ProfilePage() {
                     <Label htmlFor="username">Username</Label>
                     <Input
                       id="username"
-                      value={profile?.username || ""}
+                      value={profile?.username ?? ""}
                       disabled
                       className="bg-gray-50"
                     />
@@ -311,7 +311,7 @@ export default function ProfilePage() {
                   <div>
                     <Label htmlFor="role">Role</Label>
                     <div className="mt-2">
-                      <Badge>{profile?.role || "User"}</Badge>
+                      <Badge>{profile?.role ?? "User"}</Badge>
                     </div>
                   </div>
                 </div>

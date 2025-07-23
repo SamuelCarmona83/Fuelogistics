@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Truck, User, LogOut, Plus, Bell, Settings, BarChart3, Users, FileText } from "lucide-react";
@@ -145,18 +143,18 @@ export default function HomePage() {
                     <Avatar className="h-10 w-10">
                       <AvatarImage 
                         src={profile?.profile?.photo?.url} 
-                        alt={profile?.profile?.name || user?.username || "Profile"} 
+                        alt={profile?.profile?.name ?? user?.username ?? "Profile"} 
                       />
                       <AvatarFallback>
                         {profile?.profile?.name 
                           ? getInitials(profile.profile.name)
-                          : user?.username?.[0]?.toUpperCase() || "U"
+                          : user?.username?.[0]?.toUpperCase() ?? "U"
                         }
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0 text-left">
                       <p className="text-sm font-medium text-slate-900 truncate">
-                        {profile?.profile?.name || user?.username}
+                        {profile?.profile?.name ?? user?.username}
                       </p>
                       <p className="text-xs text-slate-500">
                         {user?.role === "admin" ? "Administrador del Sistema" : "Usuario"}

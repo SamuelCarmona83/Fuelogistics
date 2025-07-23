@@ -1,7 +1,6 @@
 import { User, Trip, Driver, Truck, Report } from '../shared/schema';
 import { Types } from 'mongoose';
 import MongoStore from 'connect-mongo';
-import mongoose from 'mongoose';
 
 interface TripFilters {
   search?: string;
@@ -198,8 +197,8 @@ export const storage = {
 
   // Session store for MongoDB
   sessionStore: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/fuel_truck_db',
-    dbName: process.env.MONGODB_DB || 'fuel_truck_db',
+    mongoUrl: process.env.MONGODB_URI ?? 'mongodb://localhost:27017/fuel_truck_db',
+    dbName: process.env.MONGODB_DB ?? 'fuel_truck_db',
     collectionName: 'sessions',
   }),
 };

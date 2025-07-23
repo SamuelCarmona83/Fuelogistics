@@ -760,7 +760,7 @@ export const SidebarHeaderWithAvatar: React.FC = () => {
   })
 
   const getInitials = (name?: string) => {
-    if (!name) return user?.username?.[0]?.toUpperCase() || "U"
+    if (!name) return user?.username?.[0]?.toUpperCase() ?? "U"
     return name
       .split(" ")
       .map(word => word[0])

@@ -44,7 +44,7 @@ export function EnhancedTripsLogistics() {
   const tripsRaw = Array.isArray((tripsResponse as any)?.trips) ? (tripsResponse as any).trips : [];
   const trips = tripsRaw.map((trip: any) => ({
     ...trip,
-    id: trip.id || trip._id,
+    id: trip.id ?? trip._id,
   }));
 
   // Status update mutations

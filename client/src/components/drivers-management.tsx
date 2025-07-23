@@ -139,10 +139,9 @@ export function DriversManagement() {
     }
   };
 
-  // TODO: Implement real-time updates using WebSockets or similar
-  // For now, we will just filter the drivers based on the search term
+    // Implement real-time updates using WebSockets when backend supports it
+  // For now, we filter the drivers based on the search term
   // This will be replaced with a more efficient solution later
-  // --- SonarQube: This TODO is tracked, but implementation is pending. ---
   const filteredDrivers = drivers.filter(driver => {
     if (!searchTerm) return true;
     

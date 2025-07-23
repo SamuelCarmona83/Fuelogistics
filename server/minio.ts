@@ -1,20 +1,20 @@
 import { Client } from 'minio';
 
-const minioInternalEndpoint = process.env.MINIO_INTERNAL_ENDPOINT || process.env.MINIO_ENDPOINT || 'http://minio:9000';
-const minioPublicEndpoint = process.env.MINIO_PUBLIC_ENDPOINT || process.env.MINIO_ENDPOINT || 'http://localhost:9000';
+const minioInternalEndpoint = process.env.MINIO_INTERNAL_ENDPOINT ?? process.env.MINIO_ENDPOINT ?? 'http://minio:9000';
+const minioPublicEndpoint = process.env.MINIO_PUBLIC_ENDPOINT ?? process.env.MINIO_ENDPOINT ?? 'http://localhost:9000';
 const endpointParts = minioInternalEndpoint.replace(/^https?:\/\//, '').split(':');
 const endPoint = endpointParts[0];
-const port = parseInt(endpointParts[1] || '9000');
+const port = parseInt(endpointParts[1] ?? '9000');
 
 const minioClient = new Client({
   endPoint,
   port,
   useSSL: process.env.MINIO_USE_SSL === 'true',
-  accessKey: process.env.MINIO_ACCESS_KEY || 'fuelogistics',
-  secretKey: process.env.MINIO_SECRET_KEY || 'fuelogistics123',
+  accessKey: process.env.MINIO_ACCESS_KEY ?? 'fuelogistics',
+  secretKey: process.env.MINIO_SECRET_KEY ?? 'fuelogistics123',
 });
 
-export const BUCKET_NAME = process.env.MINIO_BUCKET || 'fuelogistics-files';
+export const BUCKET_NAME = process.env.MINIO_BUCKET ?? 'fuelogistics-files';
 
 export async function initializeMinio() {
   try {

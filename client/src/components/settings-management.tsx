@@ -31,7 +31,7 @@ export function SettingsManagement() {
 
   // --- CARGA DE DATOS DESDE EL BACKEND ---
   // Configuración del sistema
-  const { data: systemConfigData, isLoading: loadingSystemConfig } = useQuery({
+  const { data: systemConfigData } = useQuery({
     queryKey: ["/api/system-config"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/system-config");
@@ -39,7 +39,7 @@ export function SettingsManagement() {
     },
   });
   // Preferencias de usuario
-  const { data: userPreferencesData, isLoading: loadingUserPrefs } = useQuery({
+  const { data: userPreferencesData } = useQuery({
     queryKey: ["/api/user-preferences"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/user-preferences");
@@ -48,7 +48,7 @@ export function SettingsManagement() {
     enabled: !!user,
   });
   // Configuración de seguridad
-  const { data: securitySettingsData, isLoading: loadingSecurity } = useQuery({
+  const { data: securitySettingsData } = useQuery({
     queryKey: ["/api/security-settings"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/security-settings");
@@ -56,7 +56,7 @@ export function SettingsManagement() {
     },
   });
   // Estadísticas del sistema
-  const { data: systemStats, isLoading: loadingStats, refetch: refetchStats } = useQuery({
+  const { data: systemStats, isLoading: loadingStats } = useQuery({
     queryKey: ["/api/system-stats"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/system-stats");

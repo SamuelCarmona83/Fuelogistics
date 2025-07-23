@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { Calendar, Download, TrendingUp, Fuel, Truck, MapPin, Clock } from "lucide-react";
@@ -13,11 +12,11 @@ export function ReportsDashboard() {
   const [reportType, setReportType] = useState("mensual");
 
   // Fetch trips data for reports using authentic data
-  const { data: apiData, isLoading } = useQuery({
+  const { data: apiData } = useQuery({
     queryKey: ['/api/viajes'],
   });
 
-  const tripsData = apiData?.trips || [];
+  const tripsData = apiData?.trips ?? [];
 
   // Process data for charts
   const processTripsData = () => {
@@ -26,7 +25,7 @@ export function ReportsDashboard() {
     // Daily trips count
     const dailyTrips = tripsData.reduce((acc: any, trip: any) => {
       const date = format(new Date(trip.fecha_salida), 'yyyy-MM-dd');
-      acc[date] = (acc[date] || 0) + 1;
+      acc[date] = (acc[date] ?? 0) + 1;
       return acc;
     }, {});
 
@@ -37,7 +36,7 @@ export function ReportsDashboard() {
 
     // Fuel type distribution
     const fuelTypes = tripsData.reduce((acc: any, trip: any) => {
-      acc[trip.combustible] = (acc[trip.combustible] || 0) + 1;
+      acc[trip.combustible] = (acc[trip.combustible] ?? 0) + 1;
       return acc;
     }, {});
 
@@ -48,7 +47,7 @@ export function ReportsDashboard() {
 
     // Status distribution
     const statusData = tripsData.reduce((acc: any, trip: any) => {
-      acc[trip.estado] = (acc[trip.estado] || 0) + 1;
+      acc[trip.estado] = (acc[trip.estado] ?? 0) + 1;
       return acc;
     }, {});
 
@@ -60,7 +59,7 @@ export function ReportsDashboard() {
     // Monthly fuel volume
     const monthlyVolume = tripsData.reduce((acc: any, trip: any) => {
       const month = format(new Date(trip.fecha_salida), 'MMM yyyy');
-      acc[month] = (acc[month] || 0) + trip.cantidad_litros;
+      acc[month] = (acc[month] ?? 0) + trip.cantidad_litros;
       return acc;
     }, {});
 
@@ -71,7 +70,7 @@ export function ReportsDashboard() {
 
     // Top drivers by trips
     const driverTrips = tripsData.reduce((acc: any, trip: any) => {
-      acc[trip.conductor] = (acc[trip.conductor] || 0) + 1;
+      acc[trip.conductor] = (acc[trip.conductor] ?? 0) + 1;
       return acc;
     }, {});
 
@@ -274,7 +273,7 @@ export function ReportsDashboard() {
                   dataKey="value"
                 >
                   {chartsData.fuelTypeChart.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`fuel-type-${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -320,7 +319,7 @@ export function ReportsDashboard() {
                   dataKey="value"
                 >
                   {chartsData.statusChart.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`status-${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />

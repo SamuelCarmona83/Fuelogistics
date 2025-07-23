@@ -13,6 +13,14 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Trip } from "@shared/schema";
 
+// Sort icon component extracted from main component
+const SortIcon = ({ field, sortBy, sortOrder }: { field: string; sortBy: string; sortOrder: "asc" | "desc" }) => {
+  if (sortBy !== field) return null;
+  return sortOrder === "asc" ? 
+    <ChevronUp className="ml-1 h-3 w-3" /> : 
+    <ChevronDown className="ml-1 h-3 w-3" />;
+};
+
 export function TripsTable() {
   const [filters, setFilters] = useState({
     search: "",
@@ -85,13 +93,6 @@ export function TripsTable() {
     }
   };
 
-  const SortIcon = ({ field }: { field: string }) => {
-    if (filters.sortBy !== field) return null;
-    return filters.sortOrder === "asc" ? 
-      <ChevronUp className="ml-1 h-3 w-3" /> : 
-      <ChevronDown className="ml-1 h-3 w-3" />;
-  };
-
   // Normalize trip IDs so all trips have an 'id' property
   const trips = Array.isArray(data?.trips)
     ? data.trips.map((trip: any) => ({ ...trip, id: trip.id || trip._id }))
@@ -135,7 +136,7 @@ export function TripsTable() {
                   >
                     <div className="flex items-center">
                       Conductor
-                      <SortIcon field="conductor" />
+                      <SortIcon field="conductor" sortBy={filters.sortBy} sortOrder={filters.sortOrder} />
                     </div>
                   </TableHead>
                   <TableHead 
@@ -144,7 +145,7 @@ export function TripsTable() {
                   >
                     <div className="flex items-center">
                       Camión
-                      <SortIcon field="camion" />
+                      <SortIcon field="camion" sortBy={filters.sortBy} sortOrder={filters.sortOrder} />
                     </div>
                   </TableHead>
                   <TableHead>Ruta</TableHead>
@@ -154,7 +155,7 @@ export function TripsTable() {
                   >
                     <div className="flex items-center">
                       Combustible
-                      <SortIcon field="combustible" />
+                      <SortIcon field="combustible" sortBy={filters.sortBy} sortOrder={filters.sortOrder} />
                     </div>
                   </TableHead>
                   <TableHead>Cantidad</TableHead>
@@ -164,7 +165,7 @@ export function TripsTable() {
                   >
                     <div className="flex items-center">
                       Fecha Salida
-                      <SortIcon field="fecha_salida" />
+                      <SortIcon field="fecha_salida" sortBy={filters.sortBy} sortOrder={filters.sortOrder} />
                     </div>
                   </TableHead>
                   <TableHead 
@@ -173,7 +174,7 @@ export function TripsTable() {
                   >
                     <div className="flex items-center">
                       Estado
-                      <SortIcon field="estado" />
+                      <SortIcon field="estado" sortBy={filters.sortBy} sortOrder={filters.sortOrder} />
                     </div>
                   </TableHead>
                   <TableHead className="text-right">Acciones</TableHead>

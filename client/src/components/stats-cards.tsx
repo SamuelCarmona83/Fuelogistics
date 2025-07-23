@@ -14,11 +14,11 @@ export function StatsCards() {
     queryKey: ["/api/viajes"],
   });
 
-  if (isLoading) {
+    if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[...Array(4)].map((_, i) => (
-          <Card key={i}>
+          <Card key={`loading-card-${i}`}>
             <CardContent className="pt-6">
               <div className="flex items-center">
                 <Skeleton className="h-12 w-12 rounded-lg" />
@@ -34,7 +34,7 @@ export function StatsCards() {
     );
   }
 
-  const stats = data?.stats || {
+    const stats = data?.stats ?? {
     activeTrips: 0,
     completedToday: 0,
     litersTransported: 0,
