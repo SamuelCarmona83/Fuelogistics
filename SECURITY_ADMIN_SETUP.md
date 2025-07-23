@@ -26,6 +26,9 @@ The script now enforces strong password requirements:
 
 ### Secure Way to Create Admin User
 
+There are two secure admin creation scripts available:
+
+#### Option 1: CommonJS version (recommended for production)
 ```bash
 # Set the admin password as an environment variable
 export ADMIN_PASSWORD="MySecure123!Password"
@@ -33,12 +36,36 @@ export ADMIN_PASSWORD="MySecure123!Password"
 # Optionally set custom admin username (defaults to "admin")
 export ADMIN_USERNAME="superadmin"
 
-# Run the script
+# Run the CommonJS script
 node init-db/create-admin.cjs
 
 # Clear the environment variable after use
 unset ADMIN_PASSWORD
 unset ADMIN_USERNAME
+```
+
+#### Option 2: ES Module version (uses TypeScript dependencies)
+```bash
+# Set the admin password as an environment variable
+export ADMIN_PASSWORD="MySecure123!Password"
+
+# Optionally set custom admin username (defaults to "admin")
+export ADMIN_USERNAME="superadmin"
+
+# Run the ES module script
+node init-db/create-admin.js
+
+# Clear the environment variable after use
+unset ADMIN_PASSWORD
+unset ADMIN_USERNAME
+```
+
+#### Option 3: Automated secure script
+```bash
+# Use the automated script that includes validation
+export ADMIN_PASSWORD="MySecure123!Password"
+./scripts/create-admin-secure.sh
+unset ADMIN_PASSWORD
 ```
 
 ### Docker Environment
