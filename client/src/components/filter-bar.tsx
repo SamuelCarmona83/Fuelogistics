@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search, X } from "lucide-react";
 
 interface FilterBarProps {
-  onFiltersChange?: (filters: {
+  readonly onFiltersChange?: (filters: {
     search?: string;
     status?: string;
     fuelType?: string;

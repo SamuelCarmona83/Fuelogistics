@@ -14,9 +14,9 @@ import { z } from "zod";
 import { FileUpload } from "@/components/file-upload";
 
 interface TripModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  trip?: Trip | null;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly trip?: Trip | null;
 }
 
 // Create a schema for the form that handles the datetime-local input

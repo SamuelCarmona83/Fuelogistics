@@ -7,14 +7,14 @@ import { Upload, X, FileText, Image, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 
 interface FileUploadProps {
-  onUpload: (files: File[]) => void;
-  multiple?: boolean;
-  accept?: string;
-  maxSize?: number; // in MB
-  maxFiles?: number;
-  label?: string;
-  description?: string;
-  className?: string;
+  readonly onUpload: (files: File[]) => void;
+  readonly multiple?: boolean;
+  readonly accept?: string;
+  readonly maxSize?: number; // in MB
+  readonly maxFiles?: number;
+  readonly label?: string;
+  readonly description?: string;
+  readonly className?: string;
 }
 
 interface UploadedFile {

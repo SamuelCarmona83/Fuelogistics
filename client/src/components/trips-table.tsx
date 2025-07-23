@@ -184,7 +184,7 @@ export function TripsTable() {
                 {isLoading ? (
                   // Loading skeletons
                   [...Array(5)].map((_, i) => (
-                    <TableRow key={i}>
+                    <TableRow key={`loading-row-${i}`}>
                       <TableCell><Skeleton className="h-8 w-32" /></TableCell>
                       <TableCell><Skeleton className="h-8 w-20" /></TableCell>
                       <TableCell><Skeleton className="h-8 w-40" /></TableCell>
@@ -224,8 +224,8 @@ export function TripsTable() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{trip && trip.combustible}</TableCell>
-                      <TableCell>{trip.cantidad_litros && trip.cantidad_litros?.toLocaleString()} L</TableCell>
+                      <TableCell>{trip?.combustible}</TableCell>
+                      <TableCell>{trip?.cantidad_litros?.toLocaleString()} L</TableCell>
                       <TableCell>
                         {new Date(trip.fecha_salida).toLocaleString('es-ES', {
                           day: '2-digit',
