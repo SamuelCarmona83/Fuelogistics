@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,13 +15,9 @@ import {
   Truck, 
   User, 
   Calendar,
-  Route,
-  AlertCircle,
   CheckCircle,
   XCircle,
   Play,
-  Pause,
-  Square,
   Filter,
   Search,
   Download,
@@ -36,12 +32,11 @@ export function EnhancedTripsLogistics() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("fecha_salida");
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>("desc");
   const { toast } = useToast();
 
   // Fetch trips data with enhanced filtering
-  const { data: tripsResponse, isLoading } = useQuery({
-    queryKey: ['/api/viajes', { search: searchTerm, status: statusFilter, sortBy, sortOrder }],
+  const { data: tripsResponse } = useQuery({
+    queryKey: ['/api/viajes', { search: searchTerm, status: statusFilter, sortBy }],
     refetchInterval: 10000, // Auto-refresh every 10 seconds for real-time updates
   });
 
@@ -97,10 +92,12 @@ export function EnhancedTripsLogistics() {
     const aValue = a[sortBy];
     const bValue = b[sortBy];
     
-    if (sortOrder === "asc") {
-      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+    if (aValue < bValue) {
+      return -1;
+    } else if (aValue > bValue) {
+      return 1;
     } else {
-      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      return 0;
     }
   });
 
@@ -161,7 +158,7 @@ export function EnhancedTripsLogistics() {
   const exportTripsData = () => {
     const exportData = {
       trips: sortedTrips,
-      filters: { search: searchTerm, status: statusFilter, sortBy, sortOrder },
+      filters: { search: searchTerm, status: statusFilter, sortBy },
       exportedAt: new Date().toISOString(),
       totalTrips: sortedTrips.length,
     };

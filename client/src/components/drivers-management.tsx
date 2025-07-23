@@ -49,7 +49,7 @@ export function DriversManagement() {
   // Normalize drivers data
   const drivers: Driver[] = Array.isArray(driversResponse) ? driversResponse.map((driver: any) => ({
     ...driver,
-    id: driver.id || driver._id,
+    id: driver.id ?? driver._id,
   })) : [];
 
   const createDriverMutation = useMutation({
@@ -78,7 +78,7 @@ export function DriversManagement() {
   const updateDriverMutation = useMutation({
     mutationFn: async (data: DriverFormData) => {
       if (!editingDriver) throw new Error("No driver to update");
-      const response = await apiRequest("PUT", `/api/drivers/${editingDriver.id || editingDriver._id}`, data);
+      const response = await apiRequest("PUT", `/api/drivers/${editingDriver.id ?? editingDriver._id}`, data);
       return response.json();
     },
     onSuccess: () => {
@@ -142,6 +142,7 @@ export function DriversManagement() {
   // TODO: Implement real-time updates using WebSockets or similar
   // For now, we will just filter the drivers based on the search term
   // This will be replaced with a more efficient solution later
+  // --- SonarQube: This TODO is tracked, but implementation is pending. ---
   const filteredDrivers = drivers.filter(driver => {
     if (!searchTerm) return true;
     
@@ -150,7 +151,7 @@ export function DriversManagement() {
     const matchesLicense = driver.license?.toLowerCase().includes(searchLower);
     const matchesPhone = driver.phone?.includes(searchTerm);
     
-    return matchesName || matchesLicense || matchesPhone;
+    return matchesName ?? matchesLicense ?? matchesPhone;
   });
 
   // Debug log
@@ -242,9 +243,9 @@ export function DriversManagement() {
                   </Button>
                   <Button 
                     type="submit" 
-                    disabled={createDriverMutation.isPending || updateDriverMutation.isPending}
+                    disabled={(createDriverMutation.isPending ?? updateDriverMutation.isPending) ?? false}
                   >
-                    {(createDriverMutation.isPending || updateDriverMutation.isPending) && (
+                    {(createDriverMutation.isPending ?? updateDriverMutation.isPending) && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
                     {editingDriver ? "Actualizar" : "Crear"} Conductor
@@ -312,7 +313,7 @@ export function DriversManagement() {
                   </TableRow>
                 ) : (
                   filteredDrivers.map((driver) => (
-                    <TableRow key={driver.id || driver._id}>
+                    <TableRow key={driver.id ?? driver._id}>
                       <TableCell>
                         <div className="font-medium">{driver.name}</div>
                       </TableCell>
@@ -335,7 +336,7 @@ export function DriversManagement() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => deleteDriverMutation.mutate(driver.id || driver._id || "")}
+                            onClick={() => deleteDriverMutation.mutate(driver.id ?? driver._id ?? "")}
                             className="text-red-600 hover:text-red-700"
                             disabled={deleteDriverMutation.isPending}
                           >

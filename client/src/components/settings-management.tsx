@@ -12,21 +12,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { 
   Settings, 
   User, 
-  Bell, 
-  Shield, 
   Database, 
-  Globe, 
-  Clock, 
   Save,
   RefreshCw,
   AlertTriangle,
   Users,
-  Truck,
   Activity
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import type React from "react";
 
 export function SettingsManagement() {
   const { user } = useAuth();

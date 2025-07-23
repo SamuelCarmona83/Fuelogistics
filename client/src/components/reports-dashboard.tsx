@@ -6,8 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
-import { Calendar, Download, TrendingUp, TrendingDown, Fuel, Truck, MapPin, Clock } from "lucide-react";
-import { addDays, format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { Calendar, Download, TrendingUp, Fuel, Truck, MapPin, Clock } from "lucide-react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 
 export function ReportsDashboard() {
   const [reportType, setReportType] = useState("mensual");

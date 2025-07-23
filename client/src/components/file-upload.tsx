@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
+import React from "react";
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -183,7 +184,9 @@ export function FileUpload({
             </Alert>
           )}
 
-          <div
+          <button
+            type="button"
+            tabIndex={0}
             className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
               dragActive 
                 ? 'border-blue-500 bg-blue-50' 
@@ -194,6 +197,12 @@ export function FileUpload({
             onDragOver={handleDrag}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
           >
             <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <p className="text-sm text-gray-600 mb-2">
@@ -203,7 +212,7 @@ export function FileUpload({
               {accept.includes('image') ? 'Images' : 'Files'} up to {maxSize}MB
               {multiple && ` (max ${maxFiles} files)`}
             </p>
-          </div>
+          </button>
 
           <Input
             ref={fileInputRef}
@@ -217,8 +226,8 @@ export function FileUpload({
           {selectedFiles.length > 0 && (
             <div className="space-y-2">
               <Label className="text-sm font-medium">Selected Files:</Label>
-              {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+              {selectedFiles.map((file: File, index: number) => (
+                <div key={file.name} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                   <div className="flex items-center gap-2">
                     {getFileIcon(file.name)}
                     <span className="text-sm">{file.name}</span>
@@ -249,8 +258,8 @@ export function FileUpload({
           {uploadedFiles.length > 0 && (
             <div className="space-y-2">
               <Label className="text-sm font-medium">Uploaded Files:</Label>
-              {uploadedFiles.map((file, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-green-50 rounded">
+              {uploadedFiles.map((file: UploadedFile, index: number) => (
+                <div key={file.fileName} className="flex items-center justify-between p-2 bg-green-50 rounded">
                   <div className="flex items-center gap-2">
                     {getFileIcon(file.originalName)}
                     <span className="text-sm">{file.originalName}</span>
